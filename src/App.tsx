@@ -20,6 +20,7 @@ const App: React.FC = () => {
                 favoriteGenres={userData.favoriteGenres}
                 languagePreferences={userData.languagePreferences}
                 onEditProfile={() => console.log('Przejdź do edycji profilu')}
+                onChangeProfile={() => console.log('Przejdź do innego profilu')}
             />
         </ThemeProvider>
     );

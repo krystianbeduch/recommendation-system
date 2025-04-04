@@ -1,18 +1,28 @@
-import { Avatar, Button, Chip, Container, Grid, Paper, Typography } from '@mui/material';
-import { Favorite, Language } from '@mui/icons-material';
+import { Avatar, Button, Chip, Container, Grid, Paper, Typography, Box, Stack } from '@mui/material';
+import { Favorite, Language, Movie } from '@mui/icons-material';
 
 interface UserProfileProps {
     username: string;
     favoriteGenres: string[];
     languagePreferences: string[];
     onEditProfile: () => void;
+    onChangeProfile: () => void;
 }
+
+const movies = [
+    { title: "Inception", genre: "Sci-Fi", language: "English" },
+    { title: "Parasite", genre: "Thriller", language: "Korean" },
+    { title: "Interstellar", genre: "Sci-Fi", language: "English" },
+    { title: "Amélie", genre: "Romance", language: "French" },
+    { title: "The Godfather", genre: "Crime", language: "English" }
+];
 
 const UserProfile = ({
     username,
     favoriteGenres,
     languagePreferences,
     onEditProfile,
+    onChangeProfile,
 }: UserProfileProps) => {
 
     return (
@@ -22,15 +32,14 @@ const UserProfile = ({
                 disableGutters
                 // maxWidth="md"
                 sx={{
-                    width: '60vw',
+                    width: '65vw',
                     minWidth: '250px',
-                    height: '100vh',
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
+                    // height: '100vh',
+                    // position: 'fixed',
+                    // left: 0,
+                    // top: 0,
                 }}>
-                {/* Container z MUI ogranicza szerokosc i dodaje margines na gorze (mt: 4) - margines 4*8px = 32px */}
-                {/* maxWidth="md" - szerokosc komponentu to maksymalne medium (960px na desktopie) */}
+                {/* Container z MUI */}
 
                 {/* Paper z UI tworzy tlo w formie kartki z cieniem (eleveation={3}) i paddingiem 2 */}
                 <Paper elevation={3} sx={{p: 2}}>
@@ -58,14 +67,35 @@ const UserProfile = ({
                             </Typography>
 
                             {/* Przycisk edycji */}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                size="medium"
-                                onClick={onEditProfile}
-                            >
-                                Edit profile
-                            </Button>
+                            <Stack spacing={1} direction="column" alignItems="center">
+                                <Button variant="contained" color="primary" size="medium" onClick={onEditProfile}>
+                                    Edit Profile
+                                </Button>
+                                <Button variant="contained" color="secondary" size="medium" onClick={onChangeProfile}>
+                                    Change Profile
+                                </Button>
+                            </Stack>
+                            {/*<Button*/}
+                            {/*    variant="contained"*/}
+                            {/*    color="primary"*/}
+                            {/*    size="medium"*/}
+                            {/*    onClick={onEditProfile}*/}
+                            {/*>*/}
+                            {/*    Edit profile*/}
+                            {/*</Button>*/}
+
+                            {/*<Button variant="contained" color="secondary" size="medium" onClick={onChangeProfile}>*/}
+                            {/*    Change Profile*/}
+                            {/*</Button>*/}
+
+                            {/*<Button*/}
+                            {/*    variant="contained"*/}
+                            {/*    color="primary"*/}
+                            {/*    size="medium"*/}
+                            {/*    onClick={onEditProfile}*/}
+                            {/*>*/}
+                            {/*    Change profile*/}
+                            {/*</Button>*/}
                         </Grid>
 
                         {/* Prawo strona - gatunki + jezyki */}
@@ -131,6 +161,28 @@ const UserProfile = ({
 
             {/*<div style={{flexGrow: 1}}>SAS</div>*/}
             {/*<div>asas</div>*/}
+            {/* Filmy - poniżej profilu */}
+            <Box sx={{ padding: 2 }}>
+                <Typography variant="h5" gutterBottom>
+                    <Movie sx={{ verticalAlign: 'middle', mr: 1 }} />
+                    Movies
+                </Typography>
+                <Grid container spacing={2}>
+                    {movies.map((movie, index) => (
+                        <Grid key={index} component="div">
+                            <Paper sx={{ padding: 2 }}>
+                                <Typography variant="h6">{movie.title}</Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    Genre: {movie.genre}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    Language: {movie.language}
+                                </Typography>
+                            </Paper>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
         </>
 
     );
