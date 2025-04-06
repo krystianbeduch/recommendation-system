@@ -108,7 +108,10 @@ class Movie:
         self.vote_count = vote_count
         self.popularity = popularity
         self.spoken_languages = [
-            {lang['iso_639_1']: Movie.language_map.get(lang['iso_639_1'], 'Unknown Language')}
+            {
+                "iso_639_1": lang["iso_639_1"],
+                "name": Movie.language_map.get(lang['iso_639_1'], 'Unknown')
+            }
             for lang in spoken_languages
         ]
         self.original_language = original_language
@@ -326,12 +329,12 @@ def process_data() -> List['Movie']:
     movies_list = parse_csv_to_movies('movie_data/movies_metadata_utf8.csv')
     Movie.update_movie_titles_and_overview('movie_data/movies_metadata_org.csv', movies_list)
 
+    Movie.list_genres_with_counts(movies_list)
+
     # for movie in movies_list[0:10]:
     #     print(movie)
 
     return movies_list
-    # for m in movies_list[:20]:
-        #     print(m)
 
 # Kategorie
 # Movie.list_genres_with_counts(movies_list)

@@ -1,5 +1,10 @@
-import { Avatar, Button, Chip, Container, Grid, Paper, Typography, Box, Stack } from '@mui/material';
-import { Favorite, Language, Movie } from '@mui/icons-material';
+import { Avatar, Button, Chip, Container, Grid, Paper, Typography, Stack } from '@mui/material';
+import { Favorite, Language } from '@mui/icons-material';
+import React from "react";
+
+// type Genre = "Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" |
+//     "Drama" | "Family" | "Fantasy" | "History" | "Horror" | "Music" | "Mystery" | "Romance" |
+//     "Science Fiction" | "TV Movie" | "Thriller" | "War" | "Western";
 
 interface UserProfileProps {
     username: string;
@@ -9,28 +14,37 @@ interface UserProfileProps {
     onChangeProfile: () => void;
 }
 
-const movies = [
-    { title: "Inception", genre: "Sci-Fi", language: "English" },
-    { title: "Parasite", genre: "Thriller", language: "Korean" },
-    { title: "Interstellar", genre: "Sci-Fi", language: "English" },
-    { title: "Amélie", genre: "Romance", language: "French" },
-    { title: "The Godfather", genre: "Crime", language: "English" }
-];
+const renderChips = (items: string[], color: "primary" | "secondary") => {
+    return items.length > 0 ? (
+        <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.3rem',
+            maxWidth: '100%',
+        }}>
+            {items.map(item => (
+                <Chip key={item} label={item} color={color} variant="outlined" />
+            ))}
+        </div>
+    ) : (
+        <Typography variant="body2" color="textSecondary">
+            No selected items
+        </Typography>
+    )
+}
 
-const UserProfile = ({
-    username,
-    favoriteGenres,
-    languagePreferences,
+const UserProfile: React.FC<UserProfileProps> = ({
+    username = "Anonymous", // Wartosc domyslna
+    favoriteGenres = [],
+    languagePreferences = [],
     onEditProfile,
     onChangeProfile,
 }: UserProfileProps) => {
 
     return (
-        // <div style={{display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', height: '100vh'}}>
         <>
             <Container
                 disableGutters
-                // maxWidth="md"
                 sx={{
                     width: '65vw',
                     minWidth: '250px',
@@ -113,43 +127,18 @@ const UserProfile = ({
                                         <Favorite sx={{verticalAlign: 'middle', mr: 1}}/>
                                         Favorite genres
                                     </Typography>
-
-                                    {favoriteGenres.length > 0 ? (
-                                        <div style={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: '0.3rem',
-                                            maxWidth: '100%'
-                                        }}>
-                                            {favoriteGenres.map((genre) => (
-                                                <Chip key={genre} label={genre} color="primary" variant="outlined"/>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <Typography variant="body2" color="textSecondary">
-                                            No selected movie genres
-                                        </Typography>
-                                    )}
+                                    {renderChips(favoriteGenres, "primary")}
                                 </Paper>
                             </Grid>
 
-                            {/* Sekcja preferencji językowych */}
+                            {/* Sekcja preferencji jezykowych */}
                             <Grid sx={{maxWidth: 350}} component="div">
                                 <Paper sx={{p: 1, maxHeight: 200, overflowY: 'auto'}}>
                                     <Typography variant="h6" gutterBottom>
                                         <Language sx={{verticalAlign: 'middle', mr: 1}}/>
                                         Language preferences
                                     </Typography>
-                                    <div style={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: '0.3rem',
-                                        maxWidth: '100%'
-                                    }}>
-                                        {languagePreferences.map((lang) => (
-                                            <Chip key={lang} label={lang} color="secondary" variant="outlined"/>
-                                        ))}
-                                    </div>
+                                    {renderChips(languagePreferences, "secondary")}
                                 </Paper>
                             </Grid>
                         </Grid>
@@ -158,33 +147,7 @@ const UserProfile = ({
                     </Grid>
                 </Paper>
             </Container>
-
-            {/*<div style={{flexGrow: 1}}>SAS</div>*/}
-            {/*<div>asas</div>*/}
-            {/* Filmy - poniżej profilu */}
-            <Box sx={{ padding: 2 }}>
-                <Typography variant="h5" gutterBottom>
-                    <Movie sx={{ verticalAlign: 'middle', mr: 1 }} />
-                    Movies
-                </Typography>
-                <Grid container spacing={2}>
-                    {movies.map((movie, index) => (
-                        <Grid key={index} component="div">
-                            <Paper sx={{ padding: 2 }}>
-                                <Typography variant="h6">{movie.title}</Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    Genre: {movie.genre}
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    Language: {movie.language}
-                                </Typography>
-                            </Paper>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
         </>
-
     );
 };
 

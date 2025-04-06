@@ -3,6 +3,7 @@ import UserProfile from "./components/UserProfile.tsx";
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import darkTheme from './theme';
 import React from 'react';
+import Movie from "./components/Movie.tsx";
 
 const App: React.FC = () => {
 
@@ -22,6 +23,8 @@ const App: React.FC = () => {
                 onEditProfile={() => console.log('Przejdź do edycji profilu')}
                 onChangeProfile={() => console.log('Przejdź do innego profilu')}
             />
+
+            <Movie></Movie>
         </ThemeProvider>
     );
 }
