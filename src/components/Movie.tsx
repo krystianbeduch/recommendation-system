@@ -1,49 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Grid, Paper, Typography} from '@mui/material';
+import { Box, Grid, Paper, Typography } from '@mui/material';
 import { Movie as MovieIcon } from '@mui/icons-material';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-
-// Typ danych filmów
-interface Genre {
-    id: number;
-    name: string;
-}
-
-interface Language {
-    iso_639_1: string;
-    name: string;
-}
-
-interface ProductionCompany {
-    id: number;
-    name: string;
-}
-
-interface ProductionCountry {
-    iso_3166_1: string;
-    name: string;
-}
-
-interface MovieData {
-    movie_id: number;
-    title: string;
-    genres: Genre[];
-    vote_average: number;
-    vote_count: number;
-    popularity: number;
-    spoken_languages: Language[];
-    original_language: string;
-    runtime: number;
-    budget: number;
-    imdb_id: string;
-    overview: string;
-    poster_path: string;
-    production_companies: ProductionCompany[];
-    production_countries: ProductionCountry[];
-    release_date: string;
-    revenue: number;
-}
-
+import { MovieData } from '../types.ts'
 
 const Movie: React.FC = () => {
     const [movies, setMovies] = useState<MovieData[]>([]);

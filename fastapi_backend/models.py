@@ -22,19 +22,19 @@ class ProductionCountry(BaseModel):
 class MovieModel(BaseModel):
     movie_id: int
     title: str
-    genres: List[Genre]
+    genres: list[Genre]
     vote_average: float
     vote_count: int
     popularity: float
-    spoken_languages: List[SpokenLanguage]
+    spoken_languages: list[SpokenLanguage]
     original_language: str
     runtime: int
     budget: int
     imdb_id: str
     overview: str
     poster_path: str
-    production_companies: List[ProductionCompany]
-    production_countries: List[ProductionCountry]
+    production_companies: list[ProductionCompany]
+    production_countries: list[ProductionCountry]
     release_date: str
     revenue: int
     _id: Optional[str] = None  # Dodatkowy typ dla _id (opcjonalny, bo nie zawsze będzie obecny w odpowiedzi)
@@ -44,3 +44,10 @@ class MovieModel(BaseModel):
         json_encoders = {
             ObjectId: str
         }
+
+
+class UserModel(BaseModel):
+    user_id: int
+    username: str
+    favoriteGenres: list[int]
+    languagePreferences: list[str]

@@ -203,8 +203,9 @@ class Movie:
 
         for movie in movies:
             for lang in movie.spoken_languages:
-                for lang_code, lang_name in lang.items():
-                    language_count[lang_code] += 1
+                lang_code = lang.get('iso_639_1')
+                language_count[lang_code] += 1
+
 
         for lang_code, count in sorted(language_count.items()):
             language_name = Movie.language_map.get(lang_code, 'Unknown Language')
@@ -329,7 +330,7 @@ def process_data() -> List['Movie']:
     movies_list = parse_csv_to_movies('movie_data/movies_metadata_utf8.csv')
     Movie.update_movie_titles_and_overview('movie_data/movies_metadata_org.csv', movies_list)
 
-    Movie.list_genres_with_counts(movies_list)
+    Movie.count_languages(movies_list)
 
     # for movie in movies_list[0:10]:
     #     print(movie)

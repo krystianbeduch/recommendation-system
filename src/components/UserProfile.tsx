@@ -1,18 +1,7 @@
 import { Avatar, Button, Chip, Container, Grid, Paper, Typography, Stack } from '@mui/material';
 import { Favorite, Language } from '@mui/icons-material';
 import React from "react";
-
-// type Genre = "Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" |
-//     "Drama" | "Family" | "Fantasy" | "History" | "Horror" | "Music" | "Mystery" | "Romance" |
-//     "Science Fiction" | "TV Movie" | "Thriller" | "War" | "Western";
-
-interface UserProfileProps {
-    username: string;
-    favoriteGenres: string[];
-    languagePreferences: string[];
-    onEditProfile: () => void;
-    onChangeProfile: () => void;
-}
+import { UserProfileProps } from "../types.ts";
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
     return items.length > 0 ? (

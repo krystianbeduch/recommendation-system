@@ -13,4 +13,7 @@ MONGO_URI = f"{mongo_uri}"
 client = AsyncIOMotorClient(MONGO_URI)
 
 db = client["recommendations"]
-collection = db["movies"]
+movies_collection = db["movies"]
+users_collection = db["users"]
+genres_collection = db["genres"]
+languages_collection = db["spoken_languages"]
