@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from "react";
-import {Box, Grid, Paper, Typography} from "@mui/material";
-import {Movie as MovieIcon} from "@mui/icons-material";
-import axios, {AxiosError, AxiosResponse} from "axios";
-import {MovieData, MovieProps} from "../types.ts";
+import { Movie as MovieIcon } from '@mui/icons-material';
+import { Box, Grid, Paper, Typography } from '@mui/material';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import React, { useEffect, useState } from 'react';
+import { MovieData, MovieProps } from '../types.ts';
 
 const Movie: React.FC<MovieProps> = ({ userId }) => {
     const [movies, setMovies] = useState<MovieData[]>([]);
@@ -21,16 +21,16 @@ const Movie: React.FC<MovieProps> = ({ userId }) => {
     }, [userId]);
 
     return (
-        <Box sx={{padding: 1}}>
+        <Box sx={{ padding: 1 }}>
             <Typography variant="h5" gutterBottom>
-                <MovieIcon sx={{verticalAlign: "middle", mr: 1}}/>
+                <MovieIcon sx={{ verticalAlign: "middle", mr: 1 }}/>
                 Movies
             </Typography>
             <Grid container spacing={2}>
                 {movies.length > 0 ? (
                     movies.map((movie) => (
                         <Grid key={movie.movie_id} component="div">
-                            <Paper sx={{padding: 1}}>
+                            <Paper sx={{ padding: 1 }}>
                                 <Typography variant="h6">{movie.title}</Typography>
                                 <Typography variant="body2" color="textSecondary">
                                     Genres: {movie.genres.map((genre) => genre.name).join(", ")}
@@ -43,7 +43,7 @@ const Movie: React.FC<MovieProps> = ({ userId }) => {
                                     <img
                                         src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
                                         alt={movie.title}
-                                        style={{width: "50%", borderRadius: "4px"}}
+                                        style={{ width: "50%", borderRadius: "4px" }}
                                     />
                                 )}
                             </Paper>

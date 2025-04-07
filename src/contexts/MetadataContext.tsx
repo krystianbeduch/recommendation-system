@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosResponse } from 'axios';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type GenreMap = Record<number, string>;
 type LanguageMap = Record<string, string>;
@@ -17,9 +17,11 @@ const MetadataContext = createContext<MetadataContextProps>({
     languagesMap: {},
     dataLoaded: false,
     selectedUserId: null,
-    setSelectedUserId: () => {}
+    setSelectedUserId: () => {
+    }
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMetadata = () => useContext(MetadataContext);
 
 export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,11 +44,11 @@ export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setGenresMap(Object.fromEntries(genresRes.data.map(g => [g.id, g.name])));
                 setLanguagesMap(Object.fromEntries(languagesRes.data.map(l => [l.iso_639_1, l.name])));
                 setDataLoaded(true);
-            } catch (error) {
+            }
+            catch (error) {
                 console.error("Error loading metadata", error);
             }
         };
-
         fetchMetadata();
     }, []);
 
