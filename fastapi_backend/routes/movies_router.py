@@ -2,7 +2,22 @@ from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
 from models import MovieModel
 from db import movies_collection
+from typing import List
+from abc_algorithm import main as run_abc_algorithm
 router = APIRouter()
+
+@router.get("/recommended/{user_id}", response_model=List[dict])
+async def get_recommended_movies(user_id: str):
+    """
+    Endpoint zwracający rekomendowane filmy dla użytkownika na podstawie algorytmu ABC.
+    """
+    try:
+        # Wywołanie algorytmu ABC
+        recommended_movies = await run_abc_algorithm(user_id)
+        return recommended_movies
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating recommendations: {str(e)}")
 
 @router.get("/language/{lang_code}", response_model=list[MovieModel])
 async def get_movies_by_language(lang_code: str):

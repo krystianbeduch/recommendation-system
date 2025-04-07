@@ -19,8 +19,8 @@ class ArtificialBeeColony:
         self.movies = movies
         self.user_preferences = user_preferences
         self.actual_ratings = actual_ratings  # Rzeczywiste oceny filmów
-        self.population_size = 50    # Rozmiar populacji (wektory wag)
-        self.max_iterations = 100     # Maksymalna liczba iteracji
+        self.population_size = 10    # Rozmiar populacji (wektory wag)
+        self.max_iterations = 10     # Maksymalna liczba iteracji
         self.scout_limit = 15         # Limit prób dla pszczół zwiadowczych
         # Wektor wag ma długość = liczba cech (gatunki + języki)
         self.dim = len(all_genres) + len(all_languages)
@@ -159,15 +159,15 @@ async def get_movies() -> List[Dict]:
     movies = await movies_cursor.to_list(length=1000)
     return [
         {
-            "id": movie["_id"],
+            "id": str(movie["_id"]),  # Konwersja ObjectId na str
             "movie_id": movie.get("movie_id"),
             "title": movie.get("title", ""),
-            # Przekształcamy tablicę obiektów 'genres' na listę ID
-            "genres": [g["id"] for g in movie.get("genres", [])],
-            # Używamy 'original_language' jako języka filmu
+            "genres": movie.get("genres", []),  # Zwracaj pełne dane o gatunkach
             "language": movie.get("original_language", ""),
-            # Używamy 'vote_average' jako rating
-            "rating": movie.get("vote_average", 0)
+            "spoken_languages": movie.get("spoken_languages", []),  # Zwracaj pełne dane o językach
+            "rating": movie.get("vote_average", 0),
+            "poster_path": movie.get("poster_path", ""),
+            "release_date": movie.get("release_date", ""),
         }
         for movie in movies
     ]
@@ -184,31 +184,31 @@ async def get_all_languages() -> List[str]:
     languages = await languages_cursor.to_list(length=1000)
     return [language["iso_639_1"] for language in languages]
 
-
-async def main(user_id: str):
-    print(f"Rozpoczęcie algorytmu dla użytkownika {user_id}...")
+# Uruchomienie algorytmu
+async def main(user_id: str) -> List[Dict]:
+    """Uruchamia algorytm ABC i zwraca rekomendowane filmy."""
     user_preferences = await get_user_preferences(user_id)
-    print("Pobrano preferencje użytkownika.")
     movies = await get_movies()
-    print(f"Pobrano {len(movies)} filmów z bazy danych.")
 
     global all_genres, all_languages
     all_genres = await get_all_genres()
     all_languages = await get_all_languages()
-    print(f"Pobrano {len(all_genres)} gatunków i {len(all_languages)} języków.")
 
+    # Utwórz tablicę z rzeczywistymi ocenami dla filmów
     actual_ratings = np.array([movie["rating"] for movie in movies])
+
+    # Tworzenie instancji algorytmu ABC i uruchomienie optymalizacji wag
     abc = ArtificialBeeColony(movies, user_preferences, actual_ratings)
-    print("Rozpoczęcie optymalizacji...")
     best_weights = abc.optimize()
-    print("Optymalizacja zakończona.")
+
+    # Użyj optymalnych wag do generowania przewidywanych ocen i rekomendacji
     predictions = abc.compute_predictions(best_weights)
     sorted_indices = np.argsort(-predictions)
     recommended_movies = [movies[i] for i in sorted_indices[:10]]
-    print("Rekomendacje wygenerowane.")
+
     return recommended_movies
 
-# Uruchomienie algorytmu
+# Uruchomienie algorytmu w konsoli
 # async def main():
 #     user_id = "67f2f9ae63e18c895144d61e"  # ID użytkownika z bazy
 #     user_preferences = await get_user_preferences(user_id)

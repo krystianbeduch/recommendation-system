@@ -9,17 +9,18 @@ const Movie: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get<MovieData[]>("http://localhost:8000/api/movies/language/af")
+      .get<MovieData[]>(
+        "http://localhost:8000/api/movies/recommended/67f2f9ae63e18c895144d61e"
+      )
       .then((response: AxiosResponse<MovieData[]>) => {
         setMovies(response.data);
       })
       .catch((error: AxiosError) => {
-        console.error("Error fetching movies: ", error.message);
+        console.error("Error fetching recommended movies: ", error.message);
       });
   }, []);
 
   return (
-    // <div>
     <Box sx={{ padding: 1 }}>
       <Typography variant="h5" gutterBottom>
         <MovieIcon sx={{ verticalAlign: "middle", mr: 1 }} />
@@ -30,7 +31,6 @@ const Movie: React.FC = () => {
           movies.map((movie) => (
             <Grid key={movie.movie_id} component="div">
               <Paper sx={{ padding: 1 }}>
-                {/* Wyświetlanie filmu */}
                 <Typography variant="h6">{movie.title}</Typography>
                 <Typography variant="body2" color="textSecondary">
                   Genres: {movie.genres.map((genre) => genre.name).join(", ")}
@@ -53,7 +53,6 @@ const Movie: React.FC = () => {
           <Typography variant="body1">No movies available</Typography>
         )}
       </Grid>
-      {/*</div>*/}
     </Box>
   );
 };

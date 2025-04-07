@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pymongo.errors import PyMongoError
@@ -11,8 +11,6 @@ from models import MovieModel, Genre
 from routes.movies_router import router as movies_router
 from routes.users_router import router as users_router
 from routes.mapping_router import router as mapping_router
-
-from abc_algorithm import main as run_algorithm
 
 app = FastAPI() # FastAPI init
 
@@ -45,7 +43,6 @@ async def add_movie(movie: MovieModel):
         return {"message": "Movie added successfully", "movie_id": str(result.inserted_id)}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
-        
 
 
 # @app.get("/api/genres", response_model=list[Genre])
