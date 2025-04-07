@@ -5,6 +5,26 @@ from db import users_collection
 
 router = APIRouter()
 
+@router.get("/", response_model=list[UserModel])
+async def get_all_users():
+    try:
+        users_cursor = users_collection.find({}, {"_id": 0})
+        users = await users_cursor.to_list(length=None)
+        if not users:
+            raise HTTPException(status_code=404, detail="Users not found")
+        return users
+        # users = list(users_collection.find({}, {"_id": 0}))
+        # languages_cursor = languages_collection.find({}, {"_id": 0})  # Pobiera wszystkie dokumenty, bez _id
+        # languages = await languages_cursor.to_list(length=None)
+        # if not languages:
+        #     raise HTTPException(status_code=404, detail="No genres found")
+        # return languages
+        # if not users:
+        #     raise HTTPException(status_code=404, detail="Users not found")
+        # return users
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
+
 @router.get("/{user_id}", response_model=UserModel)
 async def get_user(user_id: int):
     try:
