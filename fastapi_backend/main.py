@@ -85,7 +85,7 @@ def send_movie(movies: list['Movie']):
 # if __name__ == "__main__":
 try:
     # 2 linijki do przygotowania bazy z pliku CSV
-    movies = process_data()
+    # movies = process_data()
     # send_movie(movies)
     print("s")
 except Exception as e:
