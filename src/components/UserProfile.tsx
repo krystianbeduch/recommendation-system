@@ -61,7 +61,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                 fontSize: '2rem',
                                 margin: '0 auto 1rem'
                             }}>
-                                {username[0].toUpperCase()}
+                                {username ? username[0].toUpperCase() : "?"}
                             </Avatar>
 
                             {/* Nazwa uzytkownika */}

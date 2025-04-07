@@ -1,6 +1,9 @@
 from typing import List, Dict
 import numpy as np
 from db import users_collection, movies_collection, genres_collection, languages_collection
+from routes.languages_router import get_all_languages_codes
+from routes.genres_router import get_all_genres_id
+from routes.users_router import get_user_preferences
 from bson import ObjectId
 from scipy.stats import pearsonr
 
@@ -140,18 +143,18 @@ class ArtificialBeeColony:
         return population[sorted_indices][:10]
 
 # Funkcje do pobierania danych z MongoDB
-async def get_user_preferences(user_id: str) -> Dict:
-    """Pobiera preferencje użytkownika z bazy MongoDB."""
-    try:
-        user = await users_collection.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            raise ValueError(f"Użytkownik o ID {user_id} nie został znaleziony.")
-        return {
-            "favouriteGenres": user.get("favoriteGenres", []),
-            "languagePreferences": user.get("languagePreferences", [])
-        }
-    except Exception as e:
-        raise ValueError(f"Błąd podczas pobierania użytkownika: {str(e)}")
+# async def get_user_preferences(user_id: int) -> dict:
+#     """Pobiera preferencje użytkownika z bazy MongoDB."""
+#     try:
+#         user = await users_collection.find_one({"user_id": user_id})
+#         if not user:
+#             raise ValueError(f"Użytkownik o ID {user_id} nie został znaleziony.")
+#         return {
+#             "favouriteGenres": user.get("favoriteGenres", []),
+#             "languagePreferences": user.get("languagePreferences", [])
+#         }
+#     except Exception as e:
+#         raise ValueError(f"Błąd podczas pobierania użytkownika: {str(e)}")
 
 async def get_movies() -> List[Dict]:
     """Pobiera listę filmów z bazy MongoDB i przekształca strukturę dokumentów do postaci wykorzystywanej w algorytmie."""
@@ -172,27 +175,27 @@ async def get_movies() -> List[Dict]:
         for movie in movies
     ]
 
-async def get_all_genres() -> List[int]:
-    """Pobiera listę wszystkich ID gatunków z bazy MongoDB."""
-    genres_cursor = genres_collection.find({})
-    genres = await genres_cursor.to_list(length=1000)
-    return [genre["id"] for genre in genres]
+# async def get_all_genres() -> List[int]:
+#     """Pobiera listę wszystkich ID gatunków z bazy MongoDB."""
+#     genres_cursor = genres_collection.find({})
+#     genres = await genres_cursor.to_list(length=1000)
+#     return [genre["id"] for genre in genres]
 
-async def get_all_languages() -> List[str]:
-    """Pobiera listę wszystkich kodów języków z bazy MongoDB."""
-    languages_cursor = languages_collection.find({})
-    languages = await languages_cursor.to_list(length=1000)
-    return [language["iso_639_1"] for language in languages]
+# async def get_all_languages() -> List[str]:
+#     """Pobiera listę wszystkich kodów języków z bazy MongoDB."""
+#     languages_cursor = languages_collection.find({})
+#     languages = await languages_cursor.to_list(length=1000)
+#     return [language["iso_639_1"] for language in languages]
 
 # Uruchomienie algorytmu
-async def main(user_id: str) -> List[Dict]:
+async def main(user_id: int) -> list[dict]:
     """Uruchamia algorytm ABC i zwraca rekomendowane filmy."""
     user_preferences = await get_user_preferences(user_id)
     movies = await get_movies()
 
     global all_genres, all_languages
-    all_genres = await get_all_genres()
-    all_languages = await get_all_languages()
+    all_genres = await get_all_genres_id()
+    all_languages = await get_all_languages_codes()
 
     # Utwórz tablicę z rzeczywistymi ocenami dla filmów
     actual_ratings = np.array([movie["rating"] for movie in movies])

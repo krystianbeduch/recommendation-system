@@ -6,13 +6,14 @@ from typing import List
 from abc_algorithm import main as run_abc_algorithm
 router = APIRouter()
 
-@router.get("/recommended/{user_id}", response_model=List[dict])
-async def get_recommended_movies(user_id: str):
+@router.get("/recommended/{user_id}", response_model=list[dict])
+async def get_recommended_movies(user_id: int):
     """
     Endpoint zwracający rekomendowane filmy dla użytkownika na podstawie algorytmu ABC.
     """
     try:
         # Wywołanie algorytmu ABC
+        print(f"Wywołano rekomendacje dla user_id = {user_id}")
         recommended_movies = await run_abc_algorithm(user_id)
         return recommended_movies
 
