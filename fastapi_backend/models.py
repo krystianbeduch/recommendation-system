@@ -47,7 +47,7 @@ class MovieModel(BaseModel):
 
 
 class UserModel(BaseModel):
-    user_id: int
+    userId: int
     username: str
     favoriteGenres: list[int]
     languagePreferences: list[str]

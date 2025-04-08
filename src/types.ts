@@ -1,5 +1,21 @@
+// Typ profilu uzytkownika gotowego do wyswietlenia
+export interface UserProfileProps {
+    userId: number;
+    username: string;
+    favoriteGenres: string[];
+    languagePreferences: string[];
+    onEditProfile?: () => void;
+    onChangeProfile?: () => void;
+}
+
+// Typ dla rekomendacji filmowych w profilu uzytkownika
+export interface MovieProps {
+    userId: number;
+}
+
 // Typ odpowiadający danym użytkownika przychodzącym z API
 export interface RawUser {
+    userId: number;
     username: string;
     favoriteGenres: number[];
     languagePreferences: string[];
@@ -8,15 +24,6 @@ export interface RawUser {
 // type GenreName = "Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" |
 //     "Drama" | "Family" | "Fantasy" | "History" | "Horror" | "Music" | "Mystery" | "Romance" |
 //     "Science Fiction" | "TV Movie" | "Thriller" | "War" | "Western";
-
-// Typ użytkownika gotowego do wyświetlenia (np. z przetworzonymi danymi)
-export interface UserProfileProps {
-    username: string;
-    favoriteGenres: string[];
-    languagePreferences: string[];
-    onEditProfile: () => void;
-    onChangeProfile: () => void;
-}
 
 export interface Genre {
     id: number;
@@ -41,19 +48,9 @@ export interface ProductionCountry {
 export interface MovieData {
     movie_id: number;
     title: string;
-    genres: Genre[];
+    genres: Genre[]; // Gatunki zawierają zarówno id, jak i name
     vote_average: number;
-    vote_count: number;
-    popularity: number;
-    spoken_languages: Language[];
-    original_language: string;
-    runtime: number;
-    budget: number;
-    imdb_id: string;
-    overview: string;
+    spoken_languages: Language[]; // Języki zawierają zarówno iso_639_1, jak i name
     poster_path: string;
-    production_companies: ProductionCompany[];
-    production_countries: ProductionCountry[];
     release_date: string;
-    revenue: number;
 }
