@@ -5,40 +5,69 @@ from routes.languages_router import get_all_languages_codes
 from routes.genres_router import get_all_genres_id
 from routes.users_router import get_user_preferences
 from bson import ObjectId
-from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 
-# Globalne zmienne na listę gatunków i języków
-all_genres = []
-all_languages = []
-
-def generate_features(genres: List[int], languages: List[str], all_genres: List[int], all_languages: List[str]) -> List[int]:
-    """Generuje wektor cech na podstawie ID gatunków i języków."""
-    genre_vector = [1 if genre in genres else 0 for genre in all_genres]
-    language_vector = [1 if language in languages else 0 for language in all_languages]
+def generate_features(genres: List[int], languages: List[str],
+                      all_genres: List[int], all_languages: List[str],
+                      genre_weight: float = 2.0, language_weight: float = 1.0) -> List[float]:
+    """
+    Generuje wektor cech jako: [for każdy gatunek: genre_weight jeśli gatunek występuje, 0 w przeciwnym razie] +
+                              [for każdy język: language_weight jeśli język występuje, 0 w przeciwnym razie]
+    """
+    genre_vector = [genre_weight if genre in genres else 0 for genre in all_genres]
+    language_vector = [language_weight if language in languages else 0 for language in all_languages]
     return genre_vector + language_vector
 
 class ArtificialBeeColony:
-    def __init__(self, movies: List[Dict], user_preferences: Dict, actual_ratings: np.ndarray):
+    def __init__(self, movies: List[Dict], user_preferences: Dict, all_genres: List[int], all_languages: List[str]):
         self.movies = movies
         self.user_preferences = user_preferences
-        self.actual_ratings = actual_ratings  # Rzeczywiste oceny filmów
-        self.population_size = 10    # Rozmiar populacji (wektory wag)
-        self.max_iterations = 10     # Maksymalna liczba iteracji
-        self.scout_limit = 15         # Limit prób dla pszczół zwiadowczych
-        # Wektor wag ma długość = liczba cech (gatunki + języki)
-        self.dim = len(all_genres) + len(all_languages)
+        self.all_genres = all_genres
+        self.all_languages = all_languages
+
+        # Parametry algorytmu – można dostosować
+        self.population_size = 50
+        self.max_iterations = 10   
+        self.scout_limit = 30
+        # Wektor cech filmu: gatunki + języki + 1 dla oceny
+        self.dim = len(all_genres) + len(all_languages) + 1
 
     def compute_features(self, movie: Dict) -> np.ndarray:
-        """Generuje wektor cech filmu na podstawie ID gatunków i języka."""
-        return np.array(generate_features(
+        """
+        Generuje wektor cech filmu: składowe cech to – zakodowane gatunki i język oraz znormalizowana ocena.
+        Ocena zostaje przeskalowana (np. wagą 0.2).
+        """
+        base_features = generate_features(
             movie["genres"],
             [movie["language"]],
-            all_genres,
-            all_languages
-        ))
+            self.all_genres,
+            self.all_languages,
+            genre_weight=2.0,
+            language_weight=1.0
+        )
+        rating_feature = movie.get("normalized_rating", 0) * 0.2  # mniejsza waga dla oceny
+        features = base_features + [rating_feature]
+        return np.array(features)
+
+    def compute_user_preference_vector(self) -> np.ndarray:
+        """
+        Generuje wektor preferencji użytkownika przy użyciu tych samych wag.
+        Dodajemy stałą wartość (0.2) dla "oceny", aby wymiar się zgadzał.
+        """
+        base_preferences = generate_features(
+            self.user_preferences.get("favouriteGenres", []),
+            self.user_preferences.get("languagePreferences", []),
+            self.all_genres,
+            self.all_languages,
+            genre_weight=2.0,
+            language_weight=1.0
+        )
+        return np.array(base_preferences + [0.2])
 
     def compute_predictions(self, weights: np.ndarray) -> np.ndarray:
-        """Oblicza przewidywane oceny dla wszystkich filmów jako iloczyn skalarny wag i wektora cech filmu."""
+        """
+        Oblicza przewidywane "oceny" dla wszystkich filmów jako iloczyn skalarny wag i wektora cech filmu.
+        """
         predictions = []
         for movie in self.movies:
             features = self.compute_features(movie)
@@ -48,17 +77,24 @@ class ArtificialBeeColony:
 
     def objective_function(self, weights: np.ndarray) -> float:
         """
-        Funkcja celu – celem jest maksymalizacja dopasowania między przewidywanymi a rzeczywistymi ocenami.
-        Obliczamy współczynnik korelacji Pearsona i zwracamy jego ujemną wartość (aby minimalizacja odpowiadała maksymalizacji korelacji).
+        Funkcja celu – dopasowujemy filmy do profilu użytkownika.
+        Porównujemy wartość predykcji (dot(weights, features)) z miarą podobieństwa filmu
+        do wektora preferencji użytkownika.
+        Korzystamy z korelacji Spearmana – im wyższa korelacja, tym lepsze dopasowanie.
         """
         predictions = self.compute_predictions(weights)
-        if np.std(predictions) == 0 or np.std(self.actual_ratings) == 0:
-            return 1.0 
-        corr, _ = pearsonr(predictions, self.actual_ratings)
-        return -corr
+        user_vector = self.compute_user_preference_vector()
+        movie_similarities = np.array([
+            np.dot(self.compute_features(movie), user_vector) 
+            for movie in self.movies
+        ])
+        if np.std(predictions) == 0 or np.std(movie_similarities) == 0:
+            return 1.0
+        corr, _ = spearmanr(predictions, movie_similarities)
+        return -corr  # negatywna wartość – minimalizacja funkcji celu
 
     def initialize_population(self) -> np.ndarray:
-        """Inicjalizuje populację jako macierz wektorów wag (losowo w zakresie [0,1])."""
+        """Inicjalizuje populację rozwiązań (wektorów wag) losowo w zakresie [0, 1]."""
         return np.random.rand(self.population_size, self.dim)
 
     def generate_new_solution(self, solution: np.ndarray, population: np.ndarray) -> np.ndarray:
@@ -137,107 +173,54 @@ class ArtificialBeeColony:
         print("Optymalizacja zakończona.")
         return best_solution
 
-    def get_best_solutions(self, population: np.ndarray) -> np.ndarray:
-        """Zwraca 10 najlepszych rozwiązań z populacji."""
-        sorted_indices = np.argsort([self.objective_function(ind) for ind in population])
-        return population[sorted_indices][:10]
-
-# Funkcje do pobierania danych z MongoDB
-# async def get_user_preferences(user_id: int) -> dict:
-#     """Pobiera preferencje użytkownika z bazy MongoDB."""
-#     try:
-#         user = await users_collection.find_one({"user_id": user_id})
-#         if not user:
-#             raise ValueError(f"Użytkownik o ID {user_id} nie został znaleziony.")
-#         return {
-#             "favouriteGenres": user.get("favoriteGenres", []),
-#             "languagePreferences": user.get("languagePreferences", [])
-#         }
-#     except Exception as e:
-#         raise ValueError(f"Błąd podczas pobierania użytkownika: {str(e)}")
-
+# Funkcja pobierająca filmy z MongoDB wraz z normalizacją ocen
 async def get_movies() -> List[Dict]:
-    """Pobiera listę filmów z bazy MongoDB i przekształca strukturę dokumentów do postaci wykorzystywanej w algorytmie."""
     movies_cursor = movies_collection.find({})
     movies = await movies_cursor.to_list(length=1000)
-    return [
-        {
-            "id": str(movie["_id"]),  # Konwersja ObjectId na str
+    
+    ratings = [movie.get("vote_average", 0) for movie in movies]
+    min_rating, max_rating = min(ratings), max(ratings)
+    
+    transformed_movies = []
+    for movie in movies:
+        if max_rating != min_rating:
+            normalized = (movie.get("vote_average", 0) - min_rating) / (max_rating - min_rating)
+        else:
+            normalized = movie.get("vote_average", 0)
+        transformed_movies.append({
+            "id": str(movie["_id"]),
             "movie_id": movie.get("movie_id"),
             "title": movie.get("title", ""),
-            "genres": movie.get("genres", []),  # Zwracaj pełne dane o gatunkach
+            "genres": movie.get("genres", []),
             "language": movie.get("original_language", ""),
-            "spoken_languages": movie.get("spoken_languages", []),  # Zwracaj pełne dane o językach
+            "spoken_languages": movie.get("spoken_languages", []),
             "rating": movie.get("vote_average", 0),
+            "normalized_rating": normalized,
             "poster_path": movie.get("poster_path", ""),
             "release_date": movie.get("release_date", ""),
-        }
-        for movie in movies
-    ]
+        })
+    return transformed_movies
 
-# async def get_all_genres() -> List[int]:
-#     """Pobiera listę wszystkich ID gatunków z bazy MongoDB."""
-#     genres_cursor = genres_collection.find({})
-#     genres = await genres_cursor.to_list(length=1000)
-#     return [genre["id"] for genre in genres]
-
-# async def get_all_languages() -> List[str]:
-#     """Pobiera listę wszystkich kodów języków z bazy MongoDB."""
-#     languages_cursor = languages_collection.find({})
-#     languages = await languages_cursor.to_list(length=1000)
-#     return [language["iso_639_1"] for language in languages]
-
-# Uruchomienie algorytmu
 async def main(user_id: int) -> list[dict]:
     """Uruchamia algorytm ABC i zwraca rekomendowane filmy."""
     user_preferences = await get_user_preferences(user_id)
     movies = await get_movies()
 
-    global all_genres, all_languages
     all_genres = await get_all_genres_id()
     all_languages = await get_all_languages_codes()
 
-    # Utwórz tablicę z rzeczywistymi ocenami dla filmów
-    actual_ratings = np.array([movie["rating"] for movie in movies])
+    print("DEBUG: Wszystkie gatunki filmowe (all_genres):", all_genres)
+    print("DEBUG: Preferowane gatunki użytkownika (favouriteGenres):", user_preferences.get("favouriteGenres", []))
 
-    # Tworzenie instancji algorytmu ABC i uruchomienie optymalizacji wag
-    abc = ArtificialBeeColony(movies, user_preferences, actual_ratings)
+    abc = ArtificialBeeColony(movies, user_preferences, all_genres, all_languages)
     best_weights = abc.optimize()
 
-    # Użyj optymalnych wag do generowania przewidywanych ocen i rekomendacji
     predictions = abc.compute_predictions(best_weights)
     sorted_indices = np.argsort(-predictions)
     recommended_movies = [movies[i] for i in sorted_indices[:10]]
 
     return recommended_movies
 
-# Uruchomienie algorytmu w konsoli
-# async def main():
-#     user_id = "67f2f9ae63e18c895144d61e"  # ID użytkownika z bazy
-#     user_preferences = await get_user_preferences(user_id)
-#     movies = await get_movies()
-
-#     global all_genres, all_languages
-#     all_genres = await get_all_genres()
-#     all_languages = await get_all_languages()
-
-#     # Utwórz tablicę z rzeczywistymi ocenami dla filmów
-#     actual_ratings = np.array([movie["rating"] for movie in movies])
-    
-#     # Tworzenie instancji algorytmu ABC i uruchomienie optymalizacji wag
-#     abc = ArtificialBeeColony(movies, user_preferences, actual_ratings)
-#     best_weights = abc.optimize()
-#     print("Optymalne wagi:", best_weights)
-    
-#     # Użyj optymalnych wag do generowania przewidywanych ocen i rekomendacji
-#     predictions = abc.compute_predictions(best_weights)
-#     sorted_indices = np.argsort(-predictions)
-#     recommended_movies = [movies[i] for i in sorted_indices[:10]]
-#     print("Rekomendowane filmy:")
-#     for i in sorted_indices[:10]:
-#         movie = movies[i]
-#         print(f"{movie['title']} — predicted score: {predictions[i]:.2f}, TMDB rating: {movie.get('rating', 0)}")
-
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())
+    asyncio.run(main()) 
