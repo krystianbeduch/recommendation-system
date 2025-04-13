@@ -26,8 +26,8 @@ class ArtificialBeeColony:
         self.all_languages = all_languages
 
         # Parametry algorytmu – można dostosować
-        self.population_size = 50
-        self.max_iterations = 10   
+        self.population_size = 100
+        self.max_iterations = 100   
         self.scout_limit = 30
         # Wektor cech filmu: gatunki + języki + 1 dla oceny
         self.dim = len(all_genres) + len(all_languages) + 1
