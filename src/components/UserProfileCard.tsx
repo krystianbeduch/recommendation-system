@@ -3,13 +3,7 @@ import { Avatar, Box, Button, Chip, Paper, Typography } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMetadata } from '../contexts/MetadataContext';
-import { UserProfileProps } from '../types.ts';
-
-interface UserProfileCardProps {
-    user: UserProfileProps,
-    onSelect: () => void;
-    isSelected: boolean;
-}
+import { UserProfileCardProps } from '../types.ts';
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
     return items.length > 0 ? (

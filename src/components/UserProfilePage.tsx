@@ -30,25 +30,6 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
     onChangeProfile,
 }: UserProfileProps) => {
 
-    // const [isEditing, setIsEditing] = useState<boolean>(false);
-    //
-    // const handleEditProfile = () => {
-    //     setIsEditing(true);
-    // };
-    //
-    // const handleCancelEdit = () => {
-    //     setIsEditing(false);
-    // };
-    //
-    // const handleSaveChanges = (updatedData: { firstName: string, lastName: string, favoriteGenres: string[], languagePreferences: string[] }) => {
-    //     // Tutaj możesz wysłać dane do backendu lub zaktualizować stan aplikacji
-    //     console.log('Profile updated:', updatedData);
-    //     setIsEditing(false); // Zatrzymujemy edycję
-    // };
-
-
-
-
     return (
         <>
             {/* Container z MUI */}

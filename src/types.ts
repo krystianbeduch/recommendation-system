@@ -1,3 +1,23 @@
+// Typ meta danych ladowaych przy starcie aplikajci
+export type GenreMap = Record<number, Genre>;
+export interface MetadataContextProps {
+    genresMap: GenreMap;
+    languagesMap: Language[];
+    users: UserProfileProps[];
+    dataLoaded: boolean;
+    selectedUserId: number | null;
+    setSelectedUserId: (id: number | null) => void;
+    getUsers: () => Promise<void>;
+}
+
+// Typ odpowiadający danym użytkownika przychodzącym z API
+export interface RawUser {
+    userId: number;
+    username: string;
+    favoriteGenres: number[];
+    languagePreferences: string[];
+}
+
 // Typ profilu uzytkownika gotowego do wyswietlenia
 export interface UserProfileProps {
     userId: number;
@@ -8,21 +28,21 @@ export interface UserProfileProps {
     onChangeProfile?: () => void;
 }
 
-// export interface EditProfileProps {
-//
-// }
+export interface UserProfileCardProps {
+    user: UserProfileProps,
+    onSelect: () => void;
+    isSelected: boolean;
+}
 
 // Typ dla rekomendacji filmowych w profilu uzytkownika
 export interface MovieProps {
     userId: number;
 }
 
-// Typ odpowiadający danym użytkownika przychodzącym z API
-export interface RawUser {
-    userId: number;
+export interface EditProfileFormData {
     username: string;
-    favoriteGenres: number[];
-    languagePreferences: string[];
+    selectedGenres: Genre[];
+    selectedLanguages: Language[];
 }
 
 // type GenreName = "Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" |
@@ -53,9 +73,9 @@ export interface ProductionCountry {
 export interface MovieData {
     movie_id: number;
     title: string;
-    genres: Genre[]; // Gatunki zawierają zarówno id, jak i name
+    genres: Genre[];
     vote_average: number;
-    spoken_languages: Language[]; // Języki zawierają zarówno iso_639_1, jak i name
+    spoken_languages: Language[];
     poster_path: string;
     release_date: string;
 }

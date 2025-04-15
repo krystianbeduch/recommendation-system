@@ -13,15 +13,6 @@ async def get_all_users():
         if not users:
             raise HTTPException(status_code=404, detail="Users not found")
         return users
-        # users = list(users_collection.find({}, {"_id": 0}))
-        # languages_cursor = languages_collection.find({}, {"_id": 0})  # Pobiera wszystkie dokumenty, bez _id
-        # languages = await languages_cursor.to_list(length=None)
-        # if not languages:
-        #     raise HTTPException(status_code=404, detail="No genres found")
-        # return languages
-        # if not users:
-        #     raise HTTPException(status_code=404, detail="Users not found")
-        # return users
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
 
@@ -46,6 +37,24 @@ async def create_user(user: UserModel):
         await users_collection.insert_one(user.dict())
         return user
 
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
+
+@router.put("/edit/{user_id}", response_model=UserModel)
+async def update_user(user_id: int, user: UserModel):
+    try:
+        user_data = await users_collection.find_one({"userId": user_id})
+        if not user_data:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        update_data = user.dict(exclude_unset=True)
+        await users_collection.update_one(
+            {"userId": user_id},
+            {"$set": update_data}
+        )
+
+        updated_user = await users_collection.find_one({"userId": user_id})
+        return updated_user
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
 

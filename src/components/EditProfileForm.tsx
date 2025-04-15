@@ -1,44 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import {
-    Container,
-    TextField,
-    Typography,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    OutlinedInput,
-    Button,
-    Box,
-    Chip, SelectChangeEvent, ListSubheader
+    Alert,
+    Box, Button, Chip, Container, FormControl, InputLabel, ListSubheader, MenuItem,
+    OutlinedInput, Select, SelectChangeEvent, TextField, Typography
 } from "@mui/material";
+import axios, { AxiosError, AxiosResponse } from "axios";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMetadata } from "../contexts/MetadataContext";
-import { Genre, Language } from "../types.ts";
-
-
-interface EditProfileFormData {
-    username: string;
-    selectedGenres: Genre[];
-    selectedLanguages: Language[];
-}
+import { EditProfileFormData, Genre, Language, RawUser } from "../types.ts";
 
 const EditProfileForm: React.FC = () => {
-    const { userId } = useParams<{ userId: string}>();
+    const { userId } = useParams<{ userId: string }>();
     const userIdInt = userId ? parseInt(userId) : null;
-
-    const { genresMap, languagesMap, users, dataLoaded } = useMetadata();
-
+    const { genresMap, languagesMap, users, dataLoaded, getUsers, selectedUserId } = useMetadata();
     const user = users.find((user) => user.userId === userIdInt);
-    // if (!user) {
-    //     return null;
-    // }
 
     const [formData, setFormData] = useState<EditProfileFormData>({
         username: '',
         selectedGenres: [] as Genre[],
         selectedLanguages: [] as Language[],
     });
+
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [success, setSuccess] = useState<boolean | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (user) {
@@ -55,23 +40,12 @@ const EditProfileForm: React.FC = () => {
         return null;  // Jeśli user jest null, nie renderuj formularza
     }
 
-    // const [newGenre, setNewGenre] = useState("");
-    // const [newLanguage, setNewLanguage] = useState("");
-
-    // const [username, setUsername] = useState("");
-    // const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
-    // const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleGenresChange = (event: SelectChangeEvent<number[]>) => {
         const { value } = event.target;
-        // setFormData((prev) => ({
-        //     ...prev,
-        //     selectedGenres: value as Genre[], // Aktualizacja stanu
-        // }));
         if (Array.isArray(value)) {
             // Mapowanie `id` na pełne obiekty `Genre`
             const selectedGenres = value.map((id: number) => genresMap[id]);
@@ -80,55 +54,82 @@ const EditProfileForm: React.FC = () => {
                 ...prev,
                 selectedGenres: selectedGenres,  // Zaktualizowane obiekty `Genre`
             }));
-
-            console.log(formData);
         }
-        // const selectedGenres = value.map((id: number) => genresMap[id]);  // Mapujemy `id` na pełne obiekty `Genre`
-        // setFormData((prev) => ({
-        //     ...prev,
-        //     selectedGenres: selectedGenres,  // Zaktualizowane obiekty `Genre`
-        // }));
-
-        // console.log(formData);
     };
-        // const genres = event.target.value as Genre[]; // Casting the value to number[]
-        // setFormData({ ...fo
-
-    // const handleLanguagesChange = (event: SelectChangeEvent<unknown>) => {
-    //     const languages = event.target.value as string[]; // Casting the value to string[]
-    //     setFormData({ ...formData, selectedLanguages: languages });
-    // };
 
     const handleLanguagesChange = (event: SelectChangeEvent<string[]>) => {
         const { value } = event.target;
-        // setFormData((prev) => ({
-        //     ...prev,
-        //     selectedGenres: value as Genre[], // Aktualizacja stanu
-        // }));
         if (Array.isArray(value)) {
-            // Mapowanie `id` na pełne obiekty `Genre`
             const selectedLanguages = value
                 .map((iso_639_1: string) => languagesMap.find((lang) => lang.iso_639_1 === iso_639_1)) // Znajdź obiekt Language po iso_639_1
                 .filter((lang): lang is Language => lang !== undefined); // Filtrujemy ewentualne undefined (jeśli nie znaleziono języka)
-
 
             setFormData((prev) => ({
                 ...prev,
                 selectedLanguages: selectedLanguages,  // Zaktualizowane obiekty `Genre`
             }));
-
-            console.log(formData);
         }
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        // console.log(formData.username);
+        // console.log(formData.selectedGenres.map(genre => genre.id));
+        // console.log(formData.selectedLanguages.map(lang => lang.iso_639_1));
+
         console.log("Saving profile:", {
-            userId,
+            userIdInt,
             ...formData
         });
+
+        if (!formData.username.trim()) {
+            setErrorMessage("Please enter a name");
+            return;
+        }
+
+        setErrorMessage(null);
+
+        const requestBody = {
+            userId: userIdInt,
+            username: formData.username,
+            favoriteGenres: formData.selectedGenres.map(genre => genre.id),
+            languagePreferences: formData.selectedLanguages.map(lang => lang.iso_639_1),
+        };
+
+        console.log(requestBody);
+
+        try {
+            const response: AxiosResponse<RawUser> = await axios.put(`http://localhost:8000/api/users/edit/${userId}`, requestBody);
+            console.log(response.data);
+            setSuccess(true);
+
+            setTimeout(() => {
+                setSuccess(null);
+            }, 5000);
+
+            await getUsers();
+        }
+        catch (err) {
+            console.error("Error updating user profile: ", err)
+            const axiosError: AxiosError = err as AxiosError;
+
+            let message: string = "Failed to update user. Please try again.";
+            if (axiosError.response && axiosError.response.status === 400) {
+                message = "Invalid data submitted.";
+            } else if (axiosError.response && axiosError.response.status >= 500) {
+                message = "Server error occurred. Please try again later.";
+            }
+
+            setSuccess(false);
+            setErrorMessage(message);
+        }
         // Można teraz wysłać dane na backend
     };
+
+    const onCancel = () => {
+        console.log(selectedUserId)
+        navigate("/dashboard");
+    }
 
     if (!userIdInt || isNaN(userIdInt)) {
         return <Typography>Invalid user ID</Typography>;
@@ -138,22 +139,10 @@ const EditProfileForm: React.FC = () => {
         return <Typography>Loading metadata</Typography>;
     }
 
-    // Sortowanie gatunków alfabetycznie
-    // const sortedGenres = Object.entries(genresMap)
-    //     .sort(([, nameA], [, nameB]) =>
-    //         genre.nameA.localeCompare(genre.nameB)
-    // );
+    // Sortowanie gatunkow alfabetycznie
     const sortedGenres = Object.entries(genresMap)
         .map(([id, genre]) => [Number(id), genre] as [number, Genre])
         .sort(([, a], [, b]) => a.name.localeCompare(b.name));
-
-
-    // const allLanguages = Object.entries(languagesMap).map(([code, name, count]) => ({
-    //     code,
-    //     name,
-    //     count: languageCount[code] || 0,
-    // }));
-
 
     // Sortowanie jezykow
     const popularLanguages = languagesMap
@@ -163,11 +152,6 @@ const EditProfileForm: React.FC = () => {
     const otherLanguages = languagesMap
         .filter(lang => lang.count < 250)
         .sort((a, b) => a.name.localeCompare(b.name));
-
-
-    // const popularLanguages = Object.entries(languageCount)
-    //     .filter([langCode, count]) => count >= 250)
-    //     .sort((a, b) => b[1] - a[1]);
 
     return (
         <Container maxWidth="sm" sx={{ mt: 4 }}>
@@ -183,29 +167,23 @@ const EditProfileForm: React.FC = () => {
                     value={formData.username}
                     onChange={handleInputChange}
                     name="username"
-                    // value={user?.username}
                 />
 
                 <FormControl fullWidth margin="normal">
                     <InputLabel>Favorite Genres</InputLabel>
                     <Select
                         multiple
-                        // value={formData.selectedGenres}
-                        value={formData.selectedGenres.map((genre) => genre.id)}  // Trzymamy tylko `id` w `value`
-
+                        value={formData.selectedGenres.map((genre) => genre.id)}
                         onChange={handleGenresChange}
-                        input={<OutlinedInput label="Favorite Genres" />}
+                        input={<OutlinedInput label="Favorite Genres"/>}
                         renderValue={(selected) => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {/*{(selected as Genre[]).map((genre) => (*/}
-                                {/*    <Chip key={genre.id} label={genre.name} />*/}
-                                {/*))}*/}
                                 {(selected as unknown as number[]).map((id) => (
-                                    <Chip key={id} label={genresMap[id]?.name} />  // Mapujemy `id` z powrotem na nazwę gatunku
+                                    <Chip key={id} label={genresMap[id]?.name}/>
                                 ))}
                             </Box>
                         )}
-                     variant="outlined"
+                        variant="outlined"
                     >
                         {sortedGenres.map(([id, genre]) => (
                             <MenuItem key={id} value={id}>
@@ -219,14 +197,13 @@ const EditProfileForm: React.FC = () => {
                     <InputLabel>Language Preferences</InputLabel>
                     <Select
                         multiple
-                        // value={formData.selectedLanguages}
                         value={formData.selectedLanguages.map((lang) => lang.iso_639_1)}  // Trzymamy tylko `id` w `value`
                         onChange={handleLanguagesChange}
-                        input={<OutlinedInput label="Language Preferences" />}
+                        input={<OutlinedInput label="Language Preferences"/>}
                         renderValue={(selected) => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {(selected as string[]).map((iso) => (
-                                    <Chip key={iso} label={languagesMap.find((lang) => lang.iso_639_1 === iso)?.name} />
+                                    <Chip key={iso} label={languagesMap.find((lang) => lang.iso_639_1 === iso)?.name}/>
                                 ))}
                             </Box>
                         )}
@@ -257,7 +234,21 @@ const EditProfileForm: React.FC = () => {
                 <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
                     Save Changes
                 </Button>
+                <Button type="button" variant="contained" color="error" fullWidth sx={{ mt: 3 }} onClick={onCancel}>
+                    Exit
+                </Button>
             </form>
+            {errorMessage && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
+
+            {success && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    Profile updated successfully!
+                </Alert>
+            )}
         </Container>
     );
 };
