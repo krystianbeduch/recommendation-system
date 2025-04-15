@@ -10,6 +10,7 @@ class Genre(BaseModel):
 class SpokenLanguage(BaseModel):
     iso_639_1: str
     name: str
+    count: int
 
 class ProductionCompany(BaseModel):
     id: int

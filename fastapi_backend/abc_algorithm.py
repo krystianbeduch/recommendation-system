@@ -4,6 +4,8 @@ from db import users_collection, movies_collection, genres_collection, languages
 from routes.languages_router import get_all_languages_codes
 from routes.genres_router import get_all_genres_id
 from routes.users_router import get_user_preferences
+from scipy.spatial.distance import cosine
+
 from bson import ObjectId
 from scipy.stats import spearmanr
 
@@ -26,11 +28,18 @@ class ArtificialBeeColony:
         self.all_languages = all_languages
 
         # Parametry algorytmu – można dostosować
-        self.population_size = 100
-        self.max_iterations = 100   
+        self.population_size = 10
+        self.max_iterations = 10
         self.scout_limit = 30
         # Wektor cech filmu: gatunki + języki + 1 dla oceny
         self.dim = len(all_genres) + len(all_languages) + 1
+
+        # Buforuj wektory cech filmów
+        self.movie_features = [self.compute_features(movie) for movie in self.movies]
+        self.user_vector = self.compute_user_preference_vector()
+
+        # Buforuj podobieństwa filmów do użytkownika (do oceny korelacji)
+        # self.movie_similarities = np.array([np.dot(f, self.user_vector) for f in self.movie_features])
 
     def compute_features(self, movie: Dict) -> np.ndarray:
         """
@@ -46,8 +55,10 @@ class ArtificialBeeColony:
             language_weight=1.0
         )
         rating_feature = movie.get("normalized_rating", 0) * 0.2  # mniejsza waga dla oceny
-        features = base_features + [rating_feature]
-        return np.array(features)
+        # features = base_features + [rating_feature]
+        # return np.array(features)
+        return np.array(base_features + [rating_feature])
+
 
     def compute_user_preference_vector(self) -> np.ndarray:
         """
@@ -68,12 +79,14 @@ class ArtificialBeeColony:
         """
         Oblicza przewidywane "oceny" dla wszystkich filmów jako iloczyn skalarny wag i wektora cech filmu.
         """
-        predictions = []
-        for movie in self.movies:
-            features = self.compute_features(movie)
-            pred = np.dot(weights, features)
-            predictions.append(pred)
-        return np.array(predictions)
+        return np.dot(self.movie_features, weights)
+
+        # predictions = []
+        # for movie in self.movies:
+        #     features = self.compute_features(movie)
+        #     pred = np.dot(weights, features)
+        #     predictions.append(pred)
+        # return np.array(predictions)
 
     def objective_function(self, weights: np.ndarray) -> float:
         """
@@ -83,15 +96,20 @@ class ArtificialBeeColony:
         Korzystamy z korelacji Spearmana – im wyższa korelacja, tym lepsze dopasowanie.
         """
         predictions = self.compute_predictions(weights)
-        user_vector = self.compute_user_preference_vector()
-        movie_similarities = np.array([
-            np.dot(self.compute_features(movie), user_vector) 
-            for movie in self.movies
-        ])
-        if np.std(predictions) == 0 or np.std(movie_similarities) == 0:
-            return 1.0
-        corr, _ = spearmanr(predictions, movie_similarities)
-        return -corr  # negatywna wartość – minimalizacja funkcji celu
+        # user_vector = self.compute_user_preference_vector()
+        # movie_similarities = np.array([
+        #     np.dot(self.compute_features(movie), user_vector)
+        #     for movie in self.movies
+        # ])
+        # if np.std(predictions) == 0 or np.std(movie_similarities) == 0:
+        #     return 1.0
+        # corr, _ = spearmanr(predictions, movie_similarities)
+        # return -corr  # negatywna wartość – minimalizacja funkcji celu
+        similarities = np.array([1 - cosine(f, self.user_vector) for f in self.movie_features])
+
+        # Podobieństwo między predykcjami a rzeczywistymi podobieństwami
+        correlation = np.corrcoef(predictions, similarities)[0, 1]
+        return -correlation if not np.isnan(correlation) else 1.0
 
     def initialize_population(self) -> np.ndarray:
         """Inicjalizuje populację rozwiązań (wektorów wag) losowo w zakresie [0, 1]."""
@@ -105,8 +123,10 @@ class ArtificialBeeColony:
         j = np.random.randint(0, self.dim)
         phi = np.random.uniform(-1, 1)
         candidate = solution.copy()
-        candidate[j] = candidate[j] + phi * (candidate[j] - population[k][j])
-        candidate = np.clip(candidate, 0, 1)
+        # candidate[j] = candidate[j] + phi * (candidate[j] - population[k][j])
+        # candidate = np.clip(candidate, 0, 1)
+        candidate[j] = np.clip(candidate[j] + phi * (candidate[j] - population[k][j]), 0, 1)
+
         return candidate
 
     def employee_phase(self, population: np.ndarray, fitness: np.ndarray, trial: np.ndarray):

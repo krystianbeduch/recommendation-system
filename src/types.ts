@@ -2,11 +2,15 @@
 export interface UserProfileProps {
     userId: number;
     username: string;
-    favoriteGenres: string[];
+    favoriteGenres: Genre[];
     languagePreferences: string[];
     onEditProfile?: () => void;
     onChangeProfile?: () => void;
 }
+
+// export interface EditProfileProps {
+//
+// }
 
 // Typ dla rekomendacji filmowych w profilu uzytkownika
 export interface MovieProps {

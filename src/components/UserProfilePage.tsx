@@ -1,6 +1,6 @@
 import { Favorite, Language } from '@mui/icons-material';
 import { Avatar, Button, Chip, Container, Grid, Paper, Stack, Typography } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import { UserProfileProps } from '../types.ts';
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
@@ -22,13 +22,32 @@ const renderChips = (items: string[], color: "primary" | "secondary") => {
     )
 };
 
-const UserProfile: React.FC<UserProfileProps> = ({
-    username = "Anonymous", // Wartosc domyslna
-    favoriteGenres = [],
-    languagePreferences = [],
+const UserProfilePage: React.FC<UserProfileProps> = ({
+    username,
+    favoriteGenres,
+    languagePreferences,
     onEditProfile,
     onChangeProfile,
 }: UserProfileProps) => {
+
+    // const [isEditing, setIsEditing] = useState<boolean>(false);
+    //
+    // const handleEditProfile = () => {
+    //     setIsEditing(true);
+    // };
+    //
+    // const handleCancelEdit = () => {
+    //     setIsEditing(false);
+    // };
+    //
+    // const handleSaveChanges = (updatedData: { firstName: string, lastName: string, favoriteGenres: string[], languagePreferences: string[] }) => {
+    //     // Tutaj możesz wysłać dane do backendu lub zaktualizować stan aplikacji
+    //     console.log('Profile updated:', updatedData);
+    //     setIsEditing(false); // Zatrzymujemy edycję
+    // };
+
+
+
 
     return (
         <>
@@ -88,7 +107,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                                         <Favorite sx={{ verticalAlign: 'middle', mr: 1 }}/>
                                         Favorite genres
                                     </Typography>
-                                    {renderChips(favoriteGenres, "primary")}
+                                    {renderChips(favoriteGenres.map(genre => genre.name), "primary")}
                                 </Paper>
                             </Grid>
 
@@ -110,4 +129,4 @@ const UserProfile: React.FC<UserProfileProps> = ({
     );
 };
 
-export default UserProfile;
+export default UserProfilePage;

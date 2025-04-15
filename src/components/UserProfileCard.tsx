@@ -67,7 +67,7 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
                     <Favorite sx={{ fontSize: 18, mr: 0.5, verticalAlign: 'middle' }}/>
                     Favorite genres
                 </Typography>
-                {renderChips(user.favoriteGenres, "primary")}
+                {renderChips(user.favoriteGenres.map(genre => genre.name), "primary")}
             </Box>
 
             <Box mt={2}>

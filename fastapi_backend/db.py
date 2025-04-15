@@ -17,3 +17,4 @@ movies_collection = db["movies"]
 users_collection = db["users"]
 genres_collection = db["genres"]
 languages_collection = db["spoken_languages"]
+
