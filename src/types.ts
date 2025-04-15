@@ -3,7 +3,7 @@ export interface UserProfileProps {
     userId: number;
     username: string;
     favoriteGenres: Genre[];
-    languagePreferences: string[];
+    languagePreferences: Language[];
     onEditProfile?: () => void;
     onChangeProfile?: () => void;
 }
@@ -37,6 +37,7 @@ export interface Genre {
 export interface Language {
     iso_639_1: string;
     name: string;
+    count: number;
 }
 
 export interface ProductionCompany {

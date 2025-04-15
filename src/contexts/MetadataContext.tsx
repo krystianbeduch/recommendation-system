@@ -1,14 +1,14 @@
 import axios, { AxiosResponse } from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Genre, RawUser, UserProfileProps } from "../types.ts";
+import { Genre, Language, RawUser, UserProfileProps } from "../types.ts";
 
 type GenreMap = Record<number, Genre>;
-type LanguageMap = Record<string, string>;
+// type LanguageMap = eRcord<string, Language>;
 type LanguageCount = Record<string, number>;
 
 interface MetadataContextProps {
     genresMap: GenreMap;
-    languagesMap: LanguageMap;
+    languagesMap: Language[];
     languageCount: LanguageCount;
     users: UserProfileProps[];
     dataLoaded: boolean;
@@ -18,7 +18,7 @@ interface MetadataContextProps {
 
 const MetadataContext = createContext<MetadataContextProps>({
     genresMap: {},
-    languagesMap: {},
+    languagesMap: [],
     languageCount: {},
     users: [],
     dataLoaded: false,
@@ -31,7 +31,7 @@ export const useMetadata = () => useContext(MetadataContext);
 
 export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [genresMap, setGenresMap] = useState<GenreMap>({});
-    const [languagesMap, setLanguagesMap] = useState<LanguageMap>({});
+    const [languagesMap, setLanguagesMap] = useState<Language[]>([]);
     const [languageCount, setLanguageCount] = useState<LanguageCount>({});
     const [users, setUsers] = useState<UserProfileProps[]>([]);
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -53,12 +53,15 @@ export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 const genresMapTemp: Record<number, Genre> = Object.fromEntries(
                     genresRes.data.map(g => [g.id, { id: g.id, name: g.name }])
                 );
-                console.log("genresMapTemp");
-                console.log(genresMapTemp);
 
-                const languagesMapTemp: Record<string, string> = Object.fromEntries(
-                    languagesRes.data.map(l => [l.iso_639_1, l.name])
-                );
+                // console.log(genresMapTemp);
+
+                const languagesMapTemp: Language[] = languagesRes.data.map((l) => ({
+                    iso_639_1: l.iso_639_1,
+                    name: l.name,
+                    count: l.count,
+                }));
+                console.log("genresMapTemp");
                 console.log(languagesMapTemp)
 
                 const languageCountTemp: Record<string, number> = Object.fromEntries(
@@ -81,12 +84,12 @@ export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                         .map((id: number) => genresMapTemp[id])
                         .filter((genre): genre is Genre => genre !== undefined),
 
-                    languagePreferences: user.languagePreferences.map(
-                    (code: string) => languagesMapTemp[code] || `Unknown (${code})`
-                    ),
-                    // languagePreferences: user.languagePreferences
-                    //     .map((id: string) => languagesMapTemp[id])
-                        // .filter((lang): lang is Language => lang !== undefined),
+                    // languagePreferences: user.languagePreferences.map(
+                    // (code: string) => languagesMapTemp[code] || `Unknown (${code})`
+                    // ),
+                    languagePreferences: user.languagePreferences
+                        .map((iso_639_1: string) => languagesMapTemp.find((lang) => lang.iso_639_1 === iso_639_1))
+                        .filter((lang): lang is Language => lang !== undefined),
                 }));
 
                 setGenresMap(genresMapTemp);

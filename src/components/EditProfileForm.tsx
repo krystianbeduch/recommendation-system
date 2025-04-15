@@ -14,20 +14,20 @@ import {
     Chip, SelectChangeEvent, ListSubheader
 } from "@mui/material";
 import { useMetadata } from "../contexts/MetadataContext";
-import { Genre } from "../types.ts";
+import { Genre, Language } from "../types.ts";
 
 
 interface EditProfileFormData {
     username: string;
     selectedGenres: Genre[];
-    selectedLanguages: string[];
+    selectedLanguages: Language[];
 }
 
 const EditProfileForm: React.FC = () => {
     const { userId } = useParams<{ userId: string}>();
     const userIdInt = userId ? parseInt(userId) : null;
 
-    const { genresMap, languagesMap, languageCount, users, dataLoaded } = useMetadata();
+    const { genresMap, languagesMap, users, dataLoaded } = useMetadata();
 
     const user = users.find((user) => user.userId === userIdInt);
     // if (!user) {
@@ -37,7 +37,7 @@ const EditProfileForm: React.FC = () => {
     const [formData, setFormData] = useState<EditProfileFormData>({
         username: '',
         selectedGenres: [] as Genre[],
-        selectedLanguages: [],
+        selectedLanguages: [] as Language[],
     });
 
     useEffect(() => {
@@ -94,10 +94,32 @@ const EditProfileForm: React.FC = () => {
         // const genres = event.target.value as Genre[]; // Casting the value to number[]
         // setFormData({ ...fo
 
-    const handleLanguagesChange = (event: SelectChangeEvent<unknown>) => {
-        const languages = event.target.value as string[]; // Casting the value to string[]
-        setFormData({ ...formData, selectedLanguages: languages });
-    };
+    // const handleLanguagesChange = (event: SelectChangeEvent<unknown>) => {
+    //     const languages = event.target.value as string[]; // Casting the value to string[]
+    //     setFormData({ ...formData, selectedLanguages: languages });
+    // };
+
+    const handleLanguagesChange = (event: SelectChangeEvent<string[]>) => {
+        const { value } = event.target;
+        // setFormData((prev) => ({
+        //     ...prev,
+        //     selectedGenres: value as Genre[], // Aktualizacja stanu
+        // }));
+        if (Array.isArray(value)) {
+            // Mapowanie `id` na pełne obiekty `Genre`
+            const selectedLanguages = value
+                .map((iso_639_1: string) => languagesMap.find((lang) => lang.iso_639_1 === iso_639_1)) // Znajdź obiekt Language po iso_639_1
+                .filter((lang): lang is Language => lang !== undefined); // Filtrujemy ewentualne undefined (jeśli nie znaleziono języka)
+
+
+            setFormData((prev) => ({
+                ...prev,
+                selectedLanguages: selectedLanguages,  // Zaktualizowane obiekty `Genre`
+            }));
+
+            console.log(formData);
+        }
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -126,19 +148,19 @@ const EditProfileForm: React.FC = () => {
         .sort(([, a], [, b]) => a.name.localeCompare(b.name));
 
 
-    const allLanguages = Object.entries(languagesMap).map(([code, name]) => ({
-        code,
-        name,
-        count: languageCount[code] || 0,
-    }));
+    // const allLanguages = Object.entries(languagesMap).map(([code, name, count]) => ({
+    //     code,
+    //     name,
+    //     count: languageCount[code] || 0,
+    // }));
 
 
     // Sortowanie jezykow
-    const popularLanguages = allLanguages
+    const popularLanguages = languagesMap
         .filter(lang => lang.count >= 250)
         .sort((a, b) => b.count - a.count);
 
-    const otherLanguages = allLanguages
+    const otherLanguages = languagesMap
         .filter(lang => lang.count < 250)
         .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -197,21 +219,22 @@ const EditProfileForm: React.FC = () => {
                     <InputLabel>Language Preferences</InputLabel>
                     <Select
                         multiple
-                        value={formData.selectedLanguages}
+                        // value={formData.selectedLanguages}
+                        value={formData.selectedLanguages.map((lang) => lang.iso_639_1)}  // Trzymamy tylko `id` w `value`
                         onChange={handleLanguagesChange}
                         input={<OutlinedInput label="Language Preferences" />}
                         renderValue={(selected) => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {(selected as string[]).map((iso) => (
-                                    <Chip key={iso} label={languagesMap[iso]} />
+                                    <Chip key={iso} label={languagesMap.find((lang) => lang.iso_639_1 === iso)?.name} />
                                 ))}
                             </Box>
                         )}
                         variant="outlined"
                     >
                         <ListSubheader>Popular languages</ListSubheader>
-                        {popularLanguages.map(({ code, name, count }) => (
-                            <MenuItem key={code} value={code}>
+                        {popularLanguages.map(({ iso_639_1, name, count }) => (
+                            <MenuItem key={iso_639_1} value={iso_639_1}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                     <span>{name}</span>
                                     <span style={{ fontSize: '0.8rem', color: 'gray' }}>{count} movies</span>
@@ -220,8 +243,8 @@ const EditProfileForm: React.FC = () => {
                         ))}
 
                         <ListSubheader>Other languages</ListSubheader>
-                        {otherLanguages.map(({ code, name, count }) => (
-                            <MenuItem key={code} value={code}>
+                        {otherLanguages.map(({ iso_639_1, name, count }) => (
+                            <MenuItem key={iso_639_1} value={iso_639_1}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                     <span>{name}</span>
                                     <span style={{ fontSize: '0.8rem', color: 'gray' }}>{count} movies</span>

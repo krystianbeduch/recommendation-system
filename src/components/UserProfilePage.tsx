@@ -1,6 +1,6 @@
 import { Favorite, Language } from '@mui/icons-material';
 import { Avatar, Button, Chip, Container, Grid, Paper, Stack, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 import { UserProfileProps } from '../types.ts';
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
@@ -118,7 +118,7 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
                                         <Language sx={{ verticalAlign: 'middle', mr: 1 }}/>
                                         Language preferences
                                     </Typography>
-                                    {renderChips(languagePreferences, "secondary")}
+                                    {renderChips(languagePreferences.map(lang => lang.name), "secondary")}
                                 </Paper>
                             </Grid>
                         </Grid>

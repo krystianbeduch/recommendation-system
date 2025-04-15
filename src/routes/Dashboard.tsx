@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Movie from '../components/Movie';
-import UserProfilePage from '../components/UserProfilePage.tsx';
+import UserProfileDashboard from '../components/UserProfilePage.tsx';
 import { useMetadata } from '../contexts/MetadataContext';
 import { UserProfileProps } from '../types.ts';
 
@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
 
     return user ? (
         <>
-            <UserProfilePage {...user} />
+            <UserProfileDashboard {...user} />
             <Movie userId={user.userId}/>
         </>
     ) : (

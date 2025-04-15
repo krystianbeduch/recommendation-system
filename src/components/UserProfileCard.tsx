@@ -75,7 +75,7 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
                     <Language sx={{ fontSize: 18, mr: 0.5, verticalAlign: 'middle' }}/>
                     Language preferences
                 </Typography>
-                {renderChips(user.languagePreferences, "secondary")}
+                {renderChips(user.languagePreferences.map(lang => lang.name), "secondary")}
             </Box>
 
             <Box mt={3} textAlign="center">
