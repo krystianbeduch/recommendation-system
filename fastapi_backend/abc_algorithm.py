@@ -7,10 +7,21 @@ from routes.users_router import get_user_preferences
 from bson import ObjectId
 from scipy.stats import spearmanr
 
-def generate_features(genres: List[int], languages: List[str], all_genres: List[int], all_languages: List[str]) -> List[int]:
-    """Generuje wektor cech na podstawie ID gatunków i języków."""
-    genre_vector = [1 if genre in genres else 0 for genre in all_genres]
-    language_vector = [1 if language in languages else 0 for language in all_languages]
+def generate_features(genres: List, languages: List[str],
+                      all_genres: List[int], all_languages: List[str]) -> List[int]:
+    # jeśli genres to lista słowników, to wyciągamy same ID
+    if genres and isinstance(genres[0], dict):
+        genre_ids = [g['id'] for g in genres]
+    else:
+        genre_ids = genres
+
+    genre_vector = [1 if genre in genre_ids else 0 for genre in all_genres]
+    language_vector = [1 if lang in languages else 0 for lang in all_languages]
+    # debug
+    # if genres or languages:
+    #     print(f"GENRES: {genres}")
+    #     print(f"LANGUAGES: {languages}")
+
     return genre_vector + language_vector
 
 class ArtificialBeeColony:
@@ -21,8 +32,8 @@ class ArtificialBeeColony:
         self.all_languages = all_languages
 
         # Parametry algorytmu – można dostosować
-        self.population_size = 50
-        self.max_iterations = 10   # zwiększona liczba iteracji
+        self.population_size = 100
+        self.max_iterations = 50   # zwiększona liczba iteracji
         self.scout_limit = 30
         # Nowy wymiar: gatunki + języki + 1 dla oceny
         self.dim = len(all_genres) + len(all_languages) + 1
@@ -208,26 +219,38 @@ async def get_movies() -> List[Dict]:
     return transformed_movies
 
 async def main(user_id: int) -> list[dict]:
-    """Uruchamia algorytm ABC i zwraca rekomendowane filmy."""
-    user_preferences = await get_user_preferences(user_id)
-    movies = await get_movies()
+    print(f"Wywołano rekomendacje dla user_id = {user_id}")
 
-    # Pobieramy globalne zestawy możliwych gatunków i języków
+    user_preferences = await get_user_preferences(user_id)
+    print(">> Preferencje użytkownika:")
+    print("   favouriteGenres:", user_preferences.get("favouriteGenres"))
+    print("   languagePreferences:", user_preferences.get("languagePreferences"))
+
+    movies = await get_movies()
+    print(f">> Liczba filmów w bazie: {len(movies)}")
+    print(">> Przykładowy film:")
+    print("   title:", movies[0].get("title"))
+    print("   genres:", movies[0].get("genres"))
+    print("   language:", movies[0].get("language"))
+
     all_genres = await get_all_genres_id()
     all_languages = await get_all_languages_codes()
+    print(">> Wszystkie możliwe gatunki (ID):", all_genres)
+    print(">> Wszystkie języki:", all_languages)
 
-    # Tworzymy instancję algorytmu z wykorzystaniem danych o filmach, preferencji użytkownika
-    # oraz list gatunków i języków
     abc = ArtificialBeeColony(movies, user_preferences, all_genres, all_languages)
     best_weights = abc.optimize()
 
-    # Używamy optymalnych wag do generowania przewidywanych ocen
     predictions = abc.compute_predictions(best_weights)
     sorted_indices = np.argsort(-predictions)
     recommended_movies = [movies[i] for i in sorted_indices[:10]]
+
+    print(">> TOP 10 polecanych filmów:")
+    for m in recommended_movies:
+        print(f"  - {m['title']} | Gatunki: {m['genres']} | Język: {m['language']}")
 
     return recommended_movies
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())  
+    asyncio.run(main())
