@@ -9,7 +9,6 @@ from scipy.stats import spearmanr
 
 def generate_features(genres: List, languages: List[str],
                       all_genres: List[int], all_languages: List[str]) -> List[int]:
-    # jeśli genres to lista słowników, to wyciągamy same ID
     if genres and isinstance(genres[0], dict):
         genre_ids = [g['id'] for g in genres]
     else:
@@ -25,47 +24,46 @@ def generate_features(genres: List, languages: List[str],
     return genre_vector + language_vector
 
 class ArtificialBeeColony:
-    def __init__(self, movies: List[Dict], user_preferences: Dict, all_genres: List[int], all_languages: List[str]):
+    def __init__(self, movies: List[Dict], user_preferences: Dict,
+                 relevant_genres: List[int], relevant_languages: List[str]):
         self.movies = movies
         self.user_preferences = user_preferences
-        self.all_genres = all_genres
-        self.all_languages = all_languages
+        self.relevant_genres = relevant_genres
+        self.relevant_languages = relevant_languages
 
-        # Parametry algorytmu – można dostosować
+        # Parametry algorytmu
         self.population_size = 100
-        self.max_iterations = 50   # zwiększona liczba iteracji
+        self.max_iterations = 10
         self.scout_limit = 30
-        # Nowy wymiar: gatunki + języki + 1 dla oceny
-        self.dim = len(all_genres) + len(all_languages) + 1
+        # Wymiar zależy od długości list relewantnych cech + 1 dla oceny
+        self.dim = len(self.relevant_genres) + len(self.relevant_languages) + 1
+        print(f"ABC Initialized. Dimension (dim): {self.dim}")
 
     def compute_features(self, movie: Dict) -> np.ndarray:
         """
-        Generuje wektor cech filmu na podstawie ID gatunków, języka 
-        oraz dodaje znormalizowaną ocenę filmu.
+        Generuje wektor cech filmu na podstawie ID gatunków, języka
+        oraz dodaje znormalizowaną ocenę filmu, używając tylko relewantnych cech.
         """
         base_features = generate_features(
             movie["genres"],
             [movie["language"]],
-            self.all_genres,
-            self.all_languages
+            self.relevant_genres,      
+            self.relevant_languages   
         )
-        # Dodajemy znormalizowaną ocenę – wartość z pola "normalized_rating"
-        # Zakładamy, że została już dodana do obiektu filmu
         features = base_features + [movie.get("normalized_rating", 0)]
         return np.array(features)
 
     def compute_user_preference_vector(self) -> np.ndarray:
         """
-        Generuje wektor preferencji użytkownika.
-        Dla oceny filmu nie ma osobnych preferencji – przyjmujemy wartość 1.
+        Generuje wektor preferencji użytkownika, używając tylko relewantnych cech.
+        Dla oceny filmu przyjmujemy wartość 1.
         """
         base_preferences = generate_features(
             self.user_preferences.get("favouriteGenres", []),
             self.user_preferences.get("languagePreferences", []),
-            self.all_genres,
-            self.all_languages
+            self.relevant_genres,      
+            self.relevant_languages    
         )
-        # Do preferencji dodajemy stałą wartość dla oceny filmu (np. 1)
         return np.array(base_preferences + [1])
 
     def compute_predictions(self, weights: np.ndarray) -> np.ndarray:
@@ -131,21 +129,31 @@ class ArtificialBeeColony:
 
     def onlooker_phase(self, population: np.ndarray, fitness: np.ndarray, trial: np.ndarray):
         """Faza pszczół obserwujących – wybór rozwiązań na podstawie prawdopodobieństwa."""
-        prob = (1 / (1 + fitness)) / np.sum(1 / (1 + fitness))
-        i = 0
-        t = 0
-        while t < self.population_size:
-            if np.random.rand() < prob[i]:
-                t += 1
-                candidate = self.generate_new_solution(population[i], population)
-                candidate_fitness = self.objective_function(candidate)
-                if candidate_fitness < fitness[i]:
-                    population[i] = candidate
-                    fitness[i] = candidate_fitness
-                    trial[i] = 0
-                else:
-                    trial[i] += 1
-            i = (i + 1) % self.population_size
+        # Dodajemy mały epsilon, aby uniknąć dzielenia przez zero, gdy fitness = -1.0
+        epsilon = 1e-9
+        # Obliczamy "jakość" - im niższy fitness (bliżej -1.0), tym wyższa jakość
+        # Używamy max(0, ...) aby uniknąć problemów z fitness > -1
+        quality = 1 / (1 + fitness + epsilon) 
+        
+        total_quality = np.sum(quality)
+
+        # Jeśli suma jakości jest bliska zeru (co nie powinno się zdarzyć z epsilonem, ale na wszelki wypadek)
+        # lub jeśli wszystkie fitness są takie same (np. wszystkie -1.0), przypisz równe prawdopodobieństwo
+        if total_quality < epsilon or np.all(fitness == fitness[0]):
+             prob = np.ones(self.population_size) / self.population_size
+        else:
+            prob = quality / total_quality
+
+
+        selected_indices = np.random.choice(range(self.population_size), size=self.population_size, p=prob)
+
+        for i in selected_indices: 
+            candidate = self.generate_new_solution(population[i], population)
+            candidate_fitness = self.objective_function(candidate)
+            if candidate_fitness < fitness[i]:
+                population[i] = candidate
+                fitness[i] = candidate_fitness
+                trial[i] = 0
 
     def scout_phase(self, population: np.ndarray, fitness: np.ndarray, trial: np.ndarray):
         """
@@ -186,24 +194,40 @@ class ArtificialBeeColony:
 # Funkcja pobierania danych z MongoDB
 async def get_movies() -> List[Dict]:
     """
-    Pobiera listę filmów z bazy MongoDB i przekształca strukturę dokumentów 
-    do postaci wykorzystywanej w algorytmie. Dodaje znormalizowaną ocenę.
+    Pobiera losową próbkę filmów z bazy MongoDB za pomocą agregacji $sample,
+    przekształca strukturę dokumentów i dodaje znormalizowaną ocenę.
     """
-    movies_cursor = movies_collection.find({})
-    movies = await movies_cursor.to_list(length=1000)
-    
+    sample_size = 3000 # Liczba filmów do pobrania z bazy
+    pipeline = [
+        {"$sample": {"size": sample_size}}
+    ]
+    movies_cursor = movies_collection.aggregate(pipeline)
+    # Pobieramy wszystkie wyniki z kursora agregacji (już ograniczone przez $sample)
+    movies = await movies_cursor.to_list(length=None) 
+
+    if not movies:
+        return [] # Zwróć pustą listę, jeśli $sample nic nie znalazło (mało prawdopodobne przy dużych kolekcjach)
+
     # Wyliczamy min i max oceny (vote_average) dla normalizacji
-    ratings = [movie.get("vote_average", 0) for movie in movies]
-    min_rating, max_rating = min(ratings), max(ratings)
+    # Używamy tylko filmów, które mają ocenę
+    ratings = [movie.get("vote_average", 0) for movie in movies if movie.get("vote_average") is not None]
+    if not ratings: # Obsługa przypadku, gdy żaden z wylosowanych filmów nie ma oceny
+        min_rating, max_rating = 0, 0
+    else:
+        min_rating, max_rating = min(ratings), max(ratings)
     
     # Przekształcamy dokumenty i dodajemy pole "normalized_rating"
     transformed_movies = []
     for movie in movies:
+        rating = movie.get("vote_average", 0)
         normalized = 0
-        if max_rating != min_rating:
-            normalized = (movie.get("vote_average", 0) - min_rating) / (max_rating - min_rating)
-        else:
-            normalized = movie.get("vote_average", 0)
+        # Obsługa dzielenia przez zero, jeśli wszystkie oceny są takie same
+        if max_rating > min_rating:
+            normalized = (rating - min_rating) / (max_rating - min_rating)
+        elif max_rating > 0: # Jeśli max == min, ale nie zero, normalizuj do 1.0
+             normalized = 1.0
+        # else: normalized pozostaje 0, jeśli min=max=0
+
         transformed_movies.append({
             "id": str(movie["_id"]),
             "movie_id": movie.get("movie_id"),
@@ -211,8 +235,8 @@ async def get_movies() -> List[Dict]:
             "genres": movie.get("genres", []),
             "language": movie.get("original_language", ""),
             "spoken_languages": movie.get("spoken_languages", []),
-            "rating": movie.get("vote_average", 0),
-            "normalized_rating": normalized,
+            "rating": rating, 
+            "normalized_rating": normalized, 
             "poster_path": movie.get("poster_path", ""),
             "release_date": movie.get("release_date", ""),
         })
@@ -223,31 +247,51 @@ async def main(user_id: int) -> list[dict]:
 
     user_preferences = await get_user_preferences(user_id)
     print(">> Preferencje użytkownika:")
-    print("   favouriteGenres:", user_preferences.get("favouriteGenres"))
-    print("   languagePreferences:", user_preferences.get("languagePreferences"))
+    user_fav_genres = user_preferences.get("favouriteGenres", [])
+    user_pref_langs = user_preferences.get("languagePreferences", [])
+    print("   favouriteGenres:", user_fav_genres)
+    print("   languagePreferences:", user_pref_langs)
 
     movies = await get_movies()
+    if not movies:
+        print("Nie znaleziono filmów w bazie.")
+        return []
     print(f">> Liczba filmów w bazie: {len(movies)}")
-    print(">> Przykładowy film:")
-    print("   title:", movies[0].get("title"))
-    print("   genres:", movies[0].get("genres"))
-    print("   language:", movies[0].get("language"))
 
-    all_genres = await get_all_genres_id()
-    all_languages = await get_all_languages_codes()
-    print(">> Wszystkie możliwe gatunki (ID):", all_genres)
-    print(">> Wszystkie języki:", all_languages)
+    # Pobierz WSZYSTKIE gatunki i języki z bazy
+    all_genres_full = await get_all_genres_id()
+    all_languages_full = await get_all_languages_codes()
 
-    abc = ArtificialBeeColony(movies, user_preferences, all_genres, all_languages)
+    # --- Filtrowanie list cech ---
+    # Jeśli użytkownik ma preferencje gatunków, użyj ich; inaczej użyj wszystkich
+    relevant_genres = user_fav_genres if user_fav_genres else all_genres_full
+    # Jeśli użytkownik ma preferencje językowe, użyj ich; inaczej użyj wszystkich
+    relevant_languages = user_pref_langs if user_pref_langs else all_languages_full
+
+    relevant_genres = sorted(list(set(relevant_genres)))
+    relevant_languages = sorted(list(set(relevant_languages)))
+
+    print(">> Używane gatunki (ID):", relevant_genres)
+    print(">> Używane języki:", relevant_languages)
+
+    # Przekaż przefiltrowane listy do konstruktora ABC
+    abc = ArtificialBeeColony(movies, user_preferences, relevant_genres, relevant_languages)
     best_weights = abc.optimize()
 
     predictions = abc.compute_predictions(best_weights)
-    sorted_indices = np.argsort(-predictions)
-    recommended_movies = [movies[i] for i in sorted_indices[:10]]
+    if len(predictions) != len(movies):
+         print(f"Error: Mismatch in length between predictions ({len(predictions)}) and movies ({len(movies)})")
+         return []
+
+    sorted_indices = np.argsort(-predictions) 
+    recommended_movies = [movies[i] for i in sorted_indices[:10]] # Top 10
 
     print(">> TOP 10 polecanych filmów:")
-    for m in recommended_movies:
-        print(f"  - {m['title']} | Gatunki: {m['genres']} | Język: {m['language']}")
+    for i, idx in enumerate(sorted_indices[:10]):
+        m = movies[idx]
+        score = predictions[idx]
+        genre_names = [g.get('name', g.get('id', '?')) for g in m.get('genres', [])]
+        print(f"  {i+1}. {m.get('title', 'N/A')} | Score: {score:.4f} | Genres: {genre_names} | Lang: {m.get('language', 'N/A')}")
 
     return recommended_movies
 
