@@ -39,11 +39,23 @@ export interface MovieProps {
     userId: number;
 }
 
-export interface EditProfileFormData {
+export interface ProfileFormData {
     username: string;
     selectedGenres: Genre[];
     selectedLanguages: Language[];
 }
+
+// Formularz uzytkownika
+export interface UserProfileFormProps {
+    title: string;
+    buttonSaveLabel: string;
+    initialData: ProfileFormData;
+    onSubmit: (formData: ProfileFormData) => Promise<void>;
+    onCancel: () => void;
+    genresMap: Record<number, Genre>;
+    languagesMap: Language[];
+}
+
 
 // type GenreName = "Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" |
 //     "Drama" | "Family" | "Fantasy" | "History" | "Horror" | "Music" | "Mystery" | "Romance" |

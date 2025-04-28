@@ -1,5 +1,6 @@
-import { Favorite, Language } from '@mui/icons-material';
-import { Avatar, Box, Button, Chip, Paper, Typography } from '@mui/material';
+import { Delete, Favorite, Language } from '@mui/icons-material';
+import { Avatar, Box, Button, Chip, IconButton, Paper, Typography } from '@mui/material';
+import axios from "axios";
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMetadata } from '../contexts/MetadataContext';
@@ -34,6 +35,18 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
         navigate("/dashboard");
     };
 
+    const handleDelete = async () => {
+        if (confirm(`Are you sure you want to delete user "${user.username}"?`)) {
+            try {
+                await axios.delete(`http://localhost:8000/api/users/${user.userId}`);
+                window.location.reload();
+            }
+            catch (error) {
+                console.error("Failed to delete user:", error);
+            }
+        }
+    };
+
     return (
         <Paper
             elevation={3}
@@ -47,8 +60,28 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
                 flexDirection: "column",
                 maxHeight: "550px",
                 overflowY: "auto",
+                position: "relative"
             }}
         >
+            <IconButton
+                size="small"
+                onClick={handleDelete}
+                sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "white",
+                    backgroundColor: "error.main",
+                    '&:hover': {
+                        backgroundColor: 'error.dark',
+                    },
+                    width: 32,
+                    height: 32,
+                }}
+            >
+                <Delete fontSize="small" />
+            </IconButton>
+
             <Box textAlign="center">
                 <Avatar sx={{ width: 60, height: 60, fontSize: '1.5rem', mx: 'auto', mb: 1 }}>
                     {user.username[0]?.toUpperCase() || "?"}

@@ -33,7 +33,7 @@ class ArtificialBeeColony:
 
         # Parametry algorytmu
         self.population_size = 100
-        self.max_iterations = 10
+        self.max_iterations = 1
         self.scout_limit = 30
         # Wymiar zależy od długości list relewantnych cech + 1 dla oceny
         self.dim = len(self.relevant_genres) + len(self.relevant_languages) + 1

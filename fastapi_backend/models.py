@@ -52,3 +52,8 @@ class UserModel(BaseModel):
     username: str
     favoriteGenres: list[int]
     languagePreferences: list[str]
+
+class CreateUserRequest(BaseModel):
+    username: str
+    favoriteGenres: list[int]
+    languagePreferences: list[str]

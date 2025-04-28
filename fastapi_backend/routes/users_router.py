@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from pymongo.errors import PyMongoError
-from models import UserModel
+from models import UserModel, CreateUserRequest
 from db import users_collection
 
 router = APIRouter()
@@ -27,15 +27,40 @@ async def get_user(user_id: int):
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
 
-@router.post("/", response_model=UserModel)
-async def create_user(user: UserModel):
-    try:
-        existing_user = await users_collection.find_one({"userId": user.user_id})
-        if existing_user:
-            raise HTTPException(status_code=400, detail="User already exists")
 
-        await users_collection.insert_one(user.dict())
-        return user
+@router.post("/add", response_model=dict, status_code=201)
+async def create_user(user: CreateUserRequest):
+    try:
+        username = user.username
+        genres = user.favoriteGenres
+        languages = user.languagePreferences
+
+        if not username:
+            raise HTTPException(status_code=400, detail="Username is required")
+
+        # Generowanie userId - największy istniejący + 1
+        last_user = await users_collection.find_one(
+            {}, sort=[("userId", -1)]
+        )
+        new_user_id = (last_user["userId"] + 1) if last_user else 1
+
+        new_user = {
+            "userId": new_user_id,
+            "username": username,
+            "favoriteGenres": genres,
+            "languagePreferences": languages
+        }
+
+        result = await users_collection.insert_one(new_user)
+
+        response = {
+            "id": str(result.inserted_id),
+            "userId": new_user_id,
+            "username": username,
+            "favoriteGenres": genres,
+            "languagePreferences": languages
+        }
+        return response
 
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
@@ -58,6 +83,17 @@ async def update_user(user_id: int, user: UserModel):
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
 
+
+@router.delete("/{user_id}", status_code=204)
+async def delete_user(user_id: int):
+    try:
+        result = await users_collection.delete_one({"userId": user_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        return
+
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
 
 
 ##### ABC #####
