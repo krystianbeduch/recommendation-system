@@ -1,10 +1,11 @@
 import {
-    Alert, Box, Button, Chip, Container, FormControl, InputLabel, ListSubheader, MenuItem,
-    OutlinedInput, Select, SelectChangeEvent, TextField, Typography
-} from "@mui/material";
-import { AxiosError } from "axios";
-import React, { useEffect, useState } from "react";
-import { Genre, Language, ProfileFormData, UserProfileFormProps } from "../types";
+    Alert, Box, Button, Chip, Container, FormControl, InputLabel,
+    ListSubheader, MenuItem, OutlinedInput, Select,
+    SelectChangeEvent, TextField, Typography
+} from '@mui/material';
+import { AxiosError } from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Genre, Language, ProfileFormData, UserProfileFormProps } from '../types';
 
 const UserProfileForm: React.FC<UserProfileFormProps> = ({ title, buttonSaveLabel, initialData, onSubmit, onCancel, genresMap, languagesMap}) => {
     const [formData, setFormData] = useState<ProfileFormData>(initialData);
@@ -112,7 +113,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ title, buttonSaveLabe
                         onChange={handleGenresChange}
                         input={<OutlinedInput label="Favorite Genres" />}
                         renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                 {(selected as unknown as number[]).map((id) => (
                                     <Chip key={id} label={genresMap[id]?.name} />
                                 ))}
@@ -136,7 +137,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ title, buttonSaveLabe
                         onChange={handleLanguagesChange}
                         input={<OutlinedInput label="Language Preferences" />}
                         renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                 {(selected as string[]).map((iso) => (
                                     <Chip key={iso} label={languagesMap.find((lang) => lang.iso_639_1 === iso)?.name} />
                                 ))}
@@ -147,18 +148,18 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ title, buttonSaveLabe
                         <ListSubheader>Popular languages</ListSubheader>
                         {popularLanguages.map(({ iso_639_1, name, count }) => (
                             <MenuItem key={iso_639_1} value={iso_639_1}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                                     <span>{name}</span>
-                                    <span style={{ fontSize: '0.8rem', color: 'gray' }}>{count} movies</span>
+                                    <span style={{ fontSize: "0.8rem", color: "gray" }}>{count} movies</span>
                                 </Box>
                             </MenuItem>
                         ))}
                         <ListSubheader>Other languages</ListSubheader>
                         {otherLanguages.map(({ iso_639_1, name, count }) => (
                             <MenuItem key={iso_639_1} value={iso_639_1}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                                     <span>{name}</span>
-                                    <span style={{ fontSize: '0.8rem', color: 'gray' }}>{count} movies</span>
+                                    <span style={{ fontSize: "0.8rem", color: "gray" }}>{count} movies</span>
                                 </Box>
                             </MenuItem>
                         ))}

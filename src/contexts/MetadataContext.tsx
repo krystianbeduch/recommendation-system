@@ -1,6 +1,9 @@
 import axios, { AxiosResponse } from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Genre, GenreMap, Language, MetadataContextProps, RawUser, UserProfileProps } from "../types.ts";
+import {
+    Genre, GenreMap, Language, MetadataContextProps,
+    RawUser, UserProfileProps
+} from '../types';
 
 const MetadataContext = createContext<MetadataContextProps>({
     genresMap: {},
@@ -35,7 +38,8 @@ export const MetadataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     .filter((lang): lang is Language => lang !== undefined),
             }));
             setUsers(mappedUsers);
-        } catch (error) {
+        }
+        catch (error) {
             console.error("Error refreshing users", error);
         }
     }

@@ -55,5 +55,12 @@ class UserModel(BaseModel):
 
 class CreateUserRequest(BaseModel):
     username: str
-    favoriteGenres: list[int]
-    languagePreferences: list[str]
+    favorite_genres: list[int]
+    language_preferences: list[str]
+
+
+
+class UserRateMovieRequest(BaseModel):
+    user_id: int
+    movie_id: int
+    rating: float

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Movie from '../components/Movie';
-import UserProfileDashboard from '../components/UserProfilePage.tsx';
+import UserProfileDashboard from '../components/UserProfilePage';
 import { useMetadata } from '../contexts/MetadataContext';
-import { UserProfileProps } from '../types.ts';
+import { UserProfileProps } from '../types';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();

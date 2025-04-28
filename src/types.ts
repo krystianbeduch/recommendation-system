@@ -86,8 +86,15 @@ export interface MovieData {
     movie_id: number;
     title: string;
     genres: Genre[];
-    vote_average: number;
+    rating: number;
+    vote_count: number;
     spoken_languages: Language[];
     poster_path: string;
     release_date: string;
+}
+
+export interface UserRate {
+    user_id: number;
+    movie_id: number;
+    rating: number;
 }

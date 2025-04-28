@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
 from models import UserModel, CreateUserRequest
 from db import users_collection

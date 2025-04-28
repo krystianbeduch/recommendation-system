@@ -2,8 +2,8 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import "bootstrap/dist/css/bootstrap.min.css";
-import {MetadataProvider} from "./contexts/MetadataContext.tsx";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import {MetadataProvider} from './contexts/MetadataContext';
 
 
 createRoot(document.getElementById('root')!).render(

@@ -1,18 +1,18 @@
-import { Delete, Favorite, Language } from '@mui/icons-material';
+import { Favorite, Language, PersonRemove } from '@mui/icons-material';
 import { Avatar, Box, Button, Chip, IconButton, Paper, Typography } from '@mui/material';
-import axios from "axios";
+import axios from 'axios';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMetadata } from '../contexts/MetadataContext';
-import { UserProfileCardProps } from '../types.ts';
+import { UserProfileCardProps } from '../types';
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
     return items.length > 0 ? (
         <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '0.3rem',
-            maxWidth: '100%',
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.3rem",
+            maxWidth: "100%",
         }}>
             {items.map(item => (
                 <Chip key={item} label={item} color={color} variant="outlined"/>
@@ -72,18 +72,18 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
                     right: 8,
                     color: "white",
                     backgroundColor: "error.main",
-                    '&:hover': {
-                        backgroundColor: 'error.dark',
+                    "&:hover": {
+                        backgroundColor: "error.dark",
                     },
                     width: 32,
                     height: 32,
                 }}
             >
-                <Delete fontSize="small" />
+                <PersonRemove fontSize="small" />
             </IconButton>
 
             <Box textAlign="center">
-                <Avatar sx={{ width: 60, height: 60, fontSize: '1.5rem', mx: 'auto', mb: 1 }}>
+                <Avatar sx={{ width: 60, height: 60, fontSize: "1.5rem", mx: "auto", mb: 1 }}>
                     {user.username[0]?.toUpperCase() || "?"}
                 </Avatar>
                 <Typography variant="h6">{user.username}</Typography>
@@ -91,7 +91,7 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
 
             <Box mt={2}>
                 <Typography variant="subtitle1">
-                    <Favorite sx={{ fontSize: 18, mr: 0.5, verticalAlign: 'middle' }}/>
+                    <Favorite sx={{ fontSize: 18, mr: 0.5, verticalAlign: "middle" }}/>
                     Favorite genres
                 </Typography>
                 {renderChips(user.favoriteGenres.map(genre => genre.name), "primary")}
@@ -99,7 +99,7 @@ const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, onSelect, isSel
 
             <Box mt={2}>
                 <Typography variant="subtitle1">
-                    <Language sx={{ fontSize: 18, mr: 0.5, verticalAlign: 'middle' }}/>
+                    <Language sx={{ fontSize: 18, mr: 0.5, verticalAlign: "middle" }}/>
                     Language preferences
                 </Typography>
                 {renderChips(user.languagePreferences.map(lang => lang.name), "secondary")}

@@ -1,10 +1,9 @@
 from typing import List, Dict
 import numpy as np
-from db import users_collection, movies_collection, genres_collection, languages_collection
+from db import movies_collection
 from routes.languages_router import get_all_languages_codes
 from routes.genres_router import get_all_genres_id
 from routes.users_router import get_user_preferences
-from bson import ObjectId
 from scipy.stats import spearmanr
 
 def generate_features(genres: List, languages: List[str],
@@ -33,6 +32,7 @@ class ArtificialBeeColony:
 
         # Parametry algorytmu
         self.population_size = 100
+        # self.max_iterations = 10
         self.max_iterations = 1
         self.scout_limit = 30
         # Wymiar zależy od długości list relewantnych cech + 1 dla oceny
@@ -235,7 +235,8 @@ async def get_movies() -> List[Dict]:
             "genres": movie.get("genres", []),
             "language": movie.get("original_language", ""),
             "spoken_languages": movie.get("spoken_languages", []),
-            "rating": rating, 
+            "rating": rating,
+            "vote_count": movie.get("vote_count", 0),
             "normalized_rating": normalized, 
             "poster_path": movie.get("poster_path", ""),
             "release_date": movie.get("release_date", ""),

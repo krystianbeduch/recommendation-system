@@ -1,7 +1,7 @@
 import { Favorite, Language } from '@mui/icons-material';
 import { Avatar, Button, Chip, Container, Grid, Paper, Stack, Typography } from '@mui/material';
 import React from 'react';
-import { UserProfileProps } from '../types.ts';
+import { UserProfileProps } from '../types';
 
 const renderChips = (items: string[], color: "primary" | "secondary") => {
     return items.length > 0 ? (
@@ -36,8 +36,8 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
             <Container
                 disableGutters
                 sx={{
-                    width: '65vw',
-                    minWidth: '250px',
+                    width: "65vw",
+                    minWidth: "250px",
                 }}>
 
                 {/* Paper z UI tworzy tlo w formie kartki z cieniem (eleveation={3}) i paddingiem 2 */}
@@ -47,14 +47,14 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
                     <Grid container spacing={2} alignItems="center">
 
                         {/* Lewa strona - avatar, nazwa, przycisk */}
-                        <Grid component="div" sx={{ textAlign: 'center' }}>
+                        <Grid component="div" sx={{ textAlign: "center" }}>
 
                             {/* Avatar wyswietla inicjal uzytkownika jako ikone */}
                             <Avatar sx={{
                                 width: 80,
                                 height: 80,
-                                fontSize: '2rem',
-                                margin: '0 auto 1rem'
+                                fontSize: "2rem",
+                                margin: "0 auto 1rem"
                             }}>
                                 {username ? username[0].toUpperCase() : "?"}
                             </Avatar>
@@ -81,11 +81,11 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
                             <Grid sx={{ maxWidth: 350 }} component="div">
 
                                 {/* Paper - sekcja dostaje osobne tlo i padding */}
-                                <Paper sx={{ p: 1, maxHeight: 200, overflowY: 'auto' }}>
+                                <Paper sx={{ p: 1, maxHeight: 200, overflowY: "auto" }}>
 
                                     {/* Ulubione gatunki z ikonka serca (Favorite) */}
                                     <Typography variant="h6" gutterBottom>
-                                        <Favorite sx={{ verticalAlign: 'middle', mr: 1 }}/>
+                                        <Favorite sx={{ verticalAlign: "middle", mr: 1 }}/>
                                         Favorite genres
                                     </Typography>
                                     {renderChips(favoriteGenres.map(genre => genre.name), "primary")}
@@ -94,9 +94,9 @@ const UserProfilePage: React.FC<UserProfileProps> = ({
 
                             {/* Sekcja preferencji jezykowych */}
                             <Grid sx={{ maxWidth: 350 }} component="div">
-                                <Paper sx={{ p: 1, maxHeight: 200, overflowY: 'auto' }}>
+                                <Paper sx={{ p: 1, maxHeight: 200, overflowY: "auto" }}>
                                     <Typography variant="h6" gutterBottom>
-                                        <Language sx={{ verticalAlign: 'middle', mr: 1 }}/>
+                                        <Language sx={{ verticalAlign: "middle", mr: 1 }}/>
                                         Language preferences
                                     </Typography>
                                     {renderChips(languagePreferences.map(lang => lang.name), "secondary")}

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
-from models import MovieModel
-from db import movies_collection
-from typing import List
+
+from models import MovieModel, UserRateMovieRequest
+from db import movies_collection, rates_collection
 from abc_algorithm import main as run_abc_algorithm
 router = APIRouter()
 
@@ -44,3 +44,32 @@ async def get_movie_by_id(movie_id: int):
         raise HTTPException(status_code=404, detail="Movie not found")
 
     return movie_data
+
+@router.post("/add-rate", status_code=201)
+async def rate_movie(rate: UserRateMovieRequest):
+    try:
+        new_rating = {
+            "user_id": rate.user_id,
+            "movie_id": rate.movie_id,
+            "rating": rate.rating
+        }
+
+        await rates_collection.insert_one(new_rating)
+        return
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
+
+@router.get("/check-rate/{user_id}/{movie_id}")
+async def check_rate(user_id: int, movie_id: int):
+    try:
+        score_data = await rates_collection.find_one({
+            "user_id": user_id,
+            "movie_id": movie_id
+        }, {"_id": 0})
+
+        if score_data:
+            return {"rated": True, "score": score_data}
+        else:
+            return {"rated": False, "score": None}
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")

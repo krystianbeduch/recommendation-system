@@ -1,8 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
 from pymongo.errors import PyMongoError
-from typing import List
 
 from db import movies_collection
 
@@ -43,29 +41,6 @@ async def add_movie(movie: MovieModel):
         return {"message": "Movie added successfully", "movie_id": str(result.inserted_id)}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Mongo error: {str(e)}")
-
-
-# @app.get("/api/genres", response_model=list[Genre])
-# async def get_genres():
-#     try:
-#         genres = list(genres_collection.find({}, {"_id": 0}))  # Pobiera wszystkie dokumenty, bez _id
-#         if not genres:
-#             raise HTTPException(status_code=404, detail="No genres found")
-#         return genres
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error fetching genres: {str(e)}")
-#
-# # Pobierz języki z MongoDB
-# @app.get("/api/languages", response_model=List[Language])
-# async def get_languages():
-#     try:
-#         languages = list(languages_collection.find({}, {"_id": 0}))  # Pobiera wszystkie dokumenty, bez _id
-#         if not languages:
-#             raise HTTPException(status_code=404, detail="No languages found")
-#         return languages
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error fetching languages: {str(e)}")
-
 
 def send_movie(movies: list['Movie']):
     try:

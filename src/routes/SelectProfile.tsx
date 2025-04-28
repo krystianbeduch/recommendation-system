@@ -1,7 +1,7 @@
     import { Box, Container, Grid, IconButton, Typography } from '@mui/material';
     import PersonAddIcon from '@mui/icons-material/PersonAdd';
     import React from 'react';
-    import { useNavigate } from "react-router-dom";
+    import { useNavigate } from 'react-router-dom';
     import UserProfileCard from '../components/UserProfileCard';
     import { useMetadata } from '../contexts/MetadataContext';
 
@@ -28,8 +28,8 @@
                             ml: 2,
                             color: "black",
                             backgroundColor: "primary.main",
-                            '&:hover': {
-                                backgroundColor: 'primary.dark',
+                            "&:hover": {
+                                backgroundColor: "primary.dark",
                             },
                             width: 45,
                             height: 45
@@ -37,7 +37,6 @@
                         <PersonAddIcon fontSize="large" />
                     </IconButton>
                 </Box>
-                {/*<Typography variant="h4" gutterBottom>Select Your Profile</Typography>*/}
                 <Grid container spacing={2}>
                     {users.map(user => (
                         <Grid component="div" key={user.userId}>

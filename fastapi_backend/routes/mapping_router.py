@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
-from typing import List
 from models import SpokenLanguage, Genre
-from db import languages_collection, genres_collection, movies_collection
+from db import genres_collection, movies_collection
 
 router = APIRouter()
 
