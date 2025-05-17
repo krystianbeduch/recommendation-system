@@ -40,17 +40,20 @@ class ArtificialBeeColony:
         print(f"ABC Initialized. Dimension (dim): {self.dim}")
 
     def compute_features(self, movie: Dict) -> np.ndarray:
-        """
-        Generuje wektor cech filmu na podstawie ID gatunków, języka
-        oraz dodaje znormalizowaną ocenę filmu, używając tylko relewantnych cech.
-        """
         base_features = generate_features(
             movie["genres"],
             [movie["language"]],
-            self.relevant_genres,      
-            self.relevant_languages   
+            self.relevant_genres,
+            self.relevant_languages
         )
-        features = base_features + [movie.get("normalized_rating", 0)]
+        # Obniżenie normalized_rating dla filmów z małą liczbą ocen (np. <100)
+        rating = movie.get("normalized_rating", 0)
+        vote_count = movie.get("vote_count", 0)
+        if vote_count < 100:
+            # Można obniżyć np. o połowę lub inaczej skalować
+            rating *= 0.5  # tutaj obniżamy o połowę
+
+        features = base_features + [rating]
         return np.array(features)
 
     def compute_user_preference_vector(self) -> np.ndarray:
