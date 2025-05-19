@@ -198,7 +198,7 @@ class MovieProcessor:
 
 if __name__ == "__main__":
     #Plik UTF-8
-    utf8_csv_path = 'movies_metadata_utf8.csv'
+    utf8_csv_path = 'movie_data/movies_metadata_utf8.csv'
     
     # Tworzenie folderu na wyniki filtracji
     output_folder = 'filters_results'

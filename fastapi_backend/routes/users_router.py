@@ -32,8 +32,8 @@ async def get_user(user_id: int):
 async def create_user(user: CreateUserRequest):
     try:
         username = user.username
-        genres = user.favoriteGenres
-        languages = user.languagePreferences
+        genres = user.favorite_genres
+        languages = user.language_preferences
 
         if not username:
             raise HTTPException(status_code=400, detail="Username is required")

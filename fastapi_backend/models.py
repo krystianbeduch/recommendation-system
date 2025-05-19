@@ -2,7 +2,6 @@ from bson import ObjectId
 from pydantic import BaseModel
 from typing import Optional
 
-
 class Genre(BaseModel):
     id: int
     name: str
@@ -38,10 +37,9 @@ class MovieModel(BaseModel):
     production_countries: list[ProductionCountry]
     release_date: str
     revenue: int
-    _id: Optional[str] = None  # Dodatkowy typ dla _id (opcjonalny, bo nie zawsze będzie obecny w odpowiedzi)
+    _id: Optional[str] = None
 
     class Config:
-        # Konwertuje ObjectId na string, co jest bardziej przyjazne w JSONie
         json_encoders = {
             ObjectId: str
         }
@@ -57,8 +55,6 @@ class CreateUserRequest(BaseModel):
     username: str
     favorite_genres: list[int]
     language_preferences: list[str]
-
-
 
 class UserRateMovieRequest(BaseModel):
     user_id: int

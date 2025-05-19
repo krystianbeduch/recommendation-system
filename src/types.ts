@@ -72,16 +72,6 @@ export interface Language {
     count: number;
 }
 
-export interface ProductionCompany {
-    id: number;
-    name: string;
-}
-
-export interface ProductionCountry {
-    iso_3166_1: string;
-    name: string;
-}
-
 export interface MovieData {
     movie_id: number;
     title: string;
@@ -91,6 +81,7 @@ export interface MovieData {
     spoken_languages: Language[];
     poster_path: string;
     release_date: string;
+    score: number;
 }
 
 export interface UserRate {

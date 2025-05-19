@@ -34,7 +34,7 @@ class ArtificialBeeColony:
         self.population_size = 100
         # self.max_iterations = 10
         self.max_iterations = 1
-        self.scout_limit = 30
+        self.scout_limit = 5
         # Wymiar zależy od długości list relewantnych cech + 1 dla oceny
         self.dim = len(self.relevant_genres) + len(self.relevant_languages) + 1
         print(f"ABC Initialized. Dimension (dim): {self.dim}")
@@ -294,8 +294,10 @@ async def main(user_id: int) -> list[dict]:
     for i, idx in enumerate(sorted_indices[:10]):
         m = movies[idx]
         score = predictions[idx]
+        m['score'] = score
         genre_names = [g.get('name', g.get('id', '?')) for g in m.get('genres', [])]
         print(f"  {i+1}. {m.get('title', 'N/A')} | Score: {score:.4f} | Genres: {genre_names} | Lang: {m.get('language', 'N/A')}")
+
 
     return recommended_movies
 

@@ -103,13 +103,17 @@ const Movie: React.FC<MovieProps> = ({ userId }) => {
                                 onClick={() => handleMovieClick(movie)}>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <Typography variant="h6">{movie.title}</Typography>
-                                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                                        <StarIcon sx={{ fontSize: 18, color: "#ffd700", mr: 0.5}} />
-                                        <Typography variant="body2" color="white">
-                                            {movie.rating?.toFixed(1) ?? "NA"}/10 ({movie.vote_count ?? 0})
-                                        </Typography>
+                                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            <StarIcon sx={{ fontSize: 18, color: "#ffd700", mr: 0.5 }} />
+                                            <Typography variant="body2" color="white">
+                                                {movie.rating?.toFixed(1) ?? "NA"}/10 ({movie.vote_count ?? 0})
+                                            </Typography>
+                                        </Box>
+                                            <Typography variant="body2" color="white">
+                                                Score: {movie.score?.toFixed(4)}
+                                            </Typography>
                                     </Box>
-
                                 </Box>
                                 <Typography variant="body2" color="textSecondary">
                                     Genres: {movie.genres.map((genre) => genre.name).join(", ")}

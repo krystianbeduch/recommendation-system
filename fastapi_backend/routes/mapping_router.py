@@ -20,7 +20,7 @@ async def get_languages():
                 "foreignField": "iso_639_1",
                 "as": "language_info"
             }},
-            {"$unwind": "$language_info"},  # Rozwijamy tablicę 'language_info' (jeśli istnieje)
+            {"$unwind": "$language_info"},  # Rozwijamy tablicę 'language_info'
             {"$project": {
                 "_id": 0,
                 "iso_639_1": "$_id",
