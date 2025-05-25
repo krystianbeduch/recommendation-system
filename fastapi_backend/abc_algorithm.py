@@ -33,11 +33,11 @@ class ArtificialBeeColony:
         # Parametry algorytmu
         self.population_size = 100
         # self.max_iterations = 10
-        self.max_iterations = 1
+        self.max_iterations = 10
         self.scout_limit = 5
         # Wymiar zależy od długości list relewantnych cech + 1 dla oceny
         self.dim = len(self.relevant_genres) + len(self.relevant_languages) + 1
-        print(f"ABC Initialized. Dimension (dim): {self.dim}")
+        print(f"Inicjalizacja ABC. Wymiar przestrzeni cech (dim): {self.dim}")
 
     def compute_features(self, movie: Dict) -> np.ndarray:
         base_features = generate_features(
@@ -50,8 +50,8 @@ class ArtificialBeeColony:
         rating = movie.get("normalized_rating", 0)
         vote_count = movie.get("vote_count", 0)
         if vote_count < 100:
-            # Można obniżyć np. o połowę lub inaczej skalować
-            rating *= 0.5  # tutaj obniżamy o połowę
+            # Obniżamy wagę oceny, aby nie wpływała zbytnio na rekomendacje
+            rating *= 0.5
 
         features = base_features + [rating]
         return np.array(features)
@@ -119,7 +119,9 @@ class ArtificialBeeColony:
         return candidate
 
     def employee_phase(self, population: np.ndarray, fitness: np.ndarray, trial: np.ndarray):
-        """Faza pszczół robotnic – modyfikacja rozwiązań."""
+        """Faza pszczół robotnic – modyfikacja rozwiązań.
+            Dla każdego rozwiązania generuje nową kandydatkę poprzez mutację (losowa zmiana jednego wymiaru).
+        """
         for i in range(self.population_size):
             candidate = self.generate_new_solution(population[i], population)
             candidate_fitness = self.objective_function(candidate)
@@ -140,13 +142,12 @@ class ArtificialBeeColony:
         
         total_quality = np.sum(quality)
 
-        # Jeśli suma jakości jest bliska zeru (co nie powinno się zdarzyć z epsilonem, ale na wszelki wypadek)
-        # lub jeśli wszystkie fitness są takie same (np. wszystkie -1.0), przypisz równe prawdopodobieństwo
+        # Jeśli suma jakości jest bliska zeru lub jeśli wszystkie
+        # fitness są takie same (np. wszystkie -1.0), przypisz równe prawdopodobieństwo
         if total_quality < epsilon or np.all(fitness == fitness[0]):
              prob = np.ones(self.population_size) / self.population_size
         else:
             prob = quality / total_quality
-
 
         selected_indices = np.random.choice(range(self.population_size), size=self.population_size, p=prob)
 
@@ -196,10 +197,6 @@ class ArtificialBeeColony:
 
 # Funkcja pobierania danych z MongoDB
 async def get_movies() -> List[Dict]:
-    """
-    Pobiera losową próbkę filmów z bazy MongoDB za pomocą agregacji $sample,
-    przekształca strukturę dokumentów i dodaje znormalizowaną ocenę.
-    """
     sample_size = 3000 # Liczba filmów do pobrania z bazy
     pipeline = [
         {"$sample": {"size": sample_size}}
@@ -209,7 +206,7 @@ async def get_movies() -> List[Dict]:
     movies = await movies_cursor.to_list(length=None) 
 
     if not movies:
-        return [] # Zwróć pustą listę, jeśli $sample nic nie znalazło (mało prawdopodobne przy dużych kolekcjach)
+        return [] # Zwróć pustą listę, jeśli $sample nic nie znalazło
 
     # Wyliczamy min i max oceny (vote_average) dla normalizacji
     # Używamy tylko filmów, które mają ocenę
@@ -262,7 +259,7 @@ async def main(user_id: int) -> list[dict]:
         return []
     print(f">> Liczba filmów w bazie: {len(movies)}")
 
-    # Pobierz WSZYSTKIE gatunki i języki z bazy
+    # Pobierz gatunki i języki z bazy
     all_genres_full = await get_all_genres_id()
     all_languages_full = await get_all_languages_codes()
 
@@ -297,7 +294,6 @@ async def main(user_id: int) -> list[dict]:
         m['score'] = score
         genre_names = [g.get('name', g.get('id', '?')) for g in m.get('genres', [])]
         print(f"  {i+1}. {m.get('title', 'N/A')} | Score: {score:.4f} | Genres: {genre_names} | Lang: {m.get('language', 'N/A')}")
-
 
     return recommended_movies
 
